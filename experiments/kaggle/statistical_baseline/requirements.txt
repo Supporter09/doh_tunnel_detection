@@ -1,0 +1,8 @@
+# Python dependencies for Kaggle CPU Script tabular baseline runner
+# Kaggle CPU execution environment includes pre-installed scientific computing libraries.
+# The versions below define the supported baseline environment for local testing and reproducibility.
+numpy>=1.24.0
+pandas>=2.0.0
+pyarrow>=11.0.0
+scipy>=1.10.0
+scikit-learn>=1.2.0

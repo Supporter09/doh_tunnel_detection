@@ -1,0 +1,12 @@
+{
+  "mode": "audit",
+  "data_file": null,
+  "task": null,
+  "label_column": null,
+  "model": "all",
+  "seed": 42,
+  "max_samples_per_class": null,
+  "dataset_slug": "dhoogla/cicdohbrw2020",
+  "dataset_version": "3",
+  "description": "Reviewed execution configuration for Kaggle CPU runner. Default mode is audit; transition to train only after schema and label audit review."
+}
