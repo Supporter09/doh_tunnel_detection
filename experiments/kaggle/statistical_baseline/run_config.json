@@ -1,12 +1,12 @@
 {
   "mode": "train",
-  "data_file": "L1-DoH-NonDoH.parquet",
-  "task": "l1",
+  "data_file": "L2-BenignDoH-MaliciousDoH.parquet",
+  "task": "l2",
   "label_column": "Label",
   "model": "all",
   "seed": 42,
   "max_samples_per_class": null,
   "dataset_slug": "dhoogla/cicdohbrw2020",
   "dataset_version": "3",
-  "description": "Committed Layer 1 tabular benchmark: DoH versus NonDoH using all four classical models under the reviewed paper_flow_random_80_20 protocol."
+  "description": "Committed Layer 2 tabular benchmark: Benign DoH versus Malicious DoH using all four classical models under the reviewed paper_flow_random_80_20 protocol. Report Macro-F1, class metrics, and PR-AUC because the source labels are imbalanced."
 }
