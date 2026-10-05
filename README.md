@@ -201,6 +201,7 @@ Dự án cung cấp runner chạy trên môi trường Kaggle CPU phục vụ ki
 Dự án cung cấp bộ tài liệu hoàn chỉnh hỗ trợ triển khai, kiểm toán dữ liệu và tái hiện học thuật:
 
 * [**docs/kaggle_runner.md**](docs/kaggle_runner.md): Hướng dẫn vận hành Kaggle runner an toàn, quy trình kiểm toán schema trước (audit-first), quản lý bí mật CLI, cơ chế băm snapshot xác thực (SHA-256) và yêu cầu bắt buộc commit Git trước khi quảng bá tạo tác thực nghiệm.
+* [**docs/kaggle_tabular_benchmark.md**](docs/kaggle_tabular_benchmark.md): Kết quả có provenance của benchmark tabular Layer 1 và Layer 2 trên Kaggle; không phải kết quả tái hiện LSTM.
 * [**docs/data_contract.md**](docs/data_contract.md): Hợp đồng dữ liệu, đặc tả các trường manifest kiểm soát phiên bản (`dataset_id`, `sha256`, `licence`, `scenario_id`, `split_id`), bố cục dữ liệu thô / phái sinh và quy tắc bảo vệ quyền riêng tư.
 * [**docs/team_plan.md**](docs/team_plan.md): Kế hoạch hợp tác nhóm 3 người, phân chia vai trò, hợp đồng tích hợp giữa các module, các cột mốc tuần tự (M1–M5), tiêu chuẩn Definition of Done (DoD) và quy trình bình duyệt PR.
 * [**data/README.md**](data/README.md): Hướng dẫn tiếp cận tập dữ liệu CIRA-CIC-DoHBrw-2020 từ UNB CIC, lưu ý bản quyền, quy tắc cấm commit PCAP và cấu trúc thư mục dữ liệu cục bộ.

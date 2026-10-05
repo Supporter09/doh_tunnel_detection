@@ -1,0 +1,137 @@
+{
+  "manifest_version": "1.0.0",
+  "status": "training_success",
+  "created_at_utc": "2026-10-05T14:13:04Z",
+  "git_sha": "03e3166dff4a920a7a6a538f343ec7be19c495a3",
+  "source_snapshot_sha256": "7660d6f404a7e60200165f9fff5190d99a9bf079baa66ceaf8ddc33b6c7b9d53",
+  "config_source": "embedded",
+  "dataset_slug": "dhoogla/cicdohbrw2020",
+  "dataset_version": "3",
+  "execution_mode": "train",
+  "run_config": {
+    "mode": "train",
+    "input_dir": "/kaggle/input",
+    "output_dir": "/kaggle/working",
+    "data_file": "L2-BenignDoH-MaliciousDoH.parquet",
+    "csv_file": "L2-BenignDoH-MaliciousDoH.parquet",
+    "task": "l2",
+    "label_column": "Label",
+    "model": "all",
+    "seed": 42,
+    "max_samples_per_class": null,
+    "dataset_slug": "dhoogla/cicdohbrw2020",
+    "dataset_version": "3"
+  },
+  "random_seed": 42,
+  "split_protocol": "paper_flow_random_80_20",
+  "task": "l2",
+  "target_classes": ["benign_doh", "malicious_doh"],
+  "selected_file_format": "parquet",
+  "non_claim_scope": "This experiment evaluates statistical/tabular baseline classifiers (Random Forest, Decision Tree, Gaussian Naive Bayes, Linear SVM) on summary flow features. It strictly does NOT represent a replication of the packet-clump time-series sequence LSTM model from MontazeriShatoori et al. (2020), which requires ordered packet sequences, direction, and inter-arrival timestamps from raw PCAPs.",
+  "input_files": [
+    {
+      "filename": "L1-DoH-NonDoH.parquet",
+      "relative_path": "datasets/dhoogla/cicdohbrw2020/L1-DoH-NonDoH.parquet",
+      "format": "parquet",
+      "size_bytes": 107043097,
+      "sha256": "a6e20990d1ee21e1bb118bc4cf87eb886d26755ef5e271bb3b99bd8448009410"
+    },
+    {
+      "filename": "L2-BenignDoH-MaliciousDoH.parquet",
+      "relative_path": "datasets/dhoogla/cicdohbrw2020/L2-BenignDoH-MaliciousDoH.parquet",
+      "format": "parquet",
+      "size_bytes": 34164502,
+      "sha256": "9f64cfea189d040104e9bd93dade8aeeb5a858774b35aa6799b43d016d7fcccd"
+    }
+  ],
+  "total_tabular_files_found": 2,
+  "total_csv_files_found": 0,
+  "total_parquet_files_found": 2,
+  "selected_dataset": {
+    "filename": "L2-BenignDoH-MaliciousDoH.parquet",
+    "format": "parquet",
+    "size_bytes": 34164502,
+    "sha256": "9f64cfea189d040104e9bd93dade8aeeb5a858774b35aa6799b43d016d7fcccd",
+    "total_rows_loaded": 268661,
+    "features_used_count": 29
+  },
+  "data_split": {
+    "train_samples": 214928,
+    "test_samples": 53733,
+    "train_class_distribution": {"benign_doh": 15298, "malicious_doh": 199630},
+    "test_class_distribution": {"benign_doh": 3825, "malicious_doh": 49908}
+  },
+  "features": {
+    "count": 29,
+    "feature_names": [
+      "Duration", "FlowBytesSent", "FlowSentRate", "FlowBytesReceived", "FlowReceivedRate", "PacketLengthVariance", "PacketLengthStandardDeviation", "PacketLengthMean", "PacketLengthMedian", "PacketLengthMode", "PacketLengthSkewFromMedian", "PacketLengthSkewFromMode", "PacketLengthCoefficientofVariation", "PacketTimeVariance", "PacketTimeStandardDeviation", "PacketTimeMean", "PacketTimeMedian", "PacketTimeMode", "PacketTimeSkewFromMedian", "PacketTimeSkewFromMode", "PacketTimeCoefficientofVariation", "ResponseTimeTimeVariance", "ResponseTimeTimeStandardDeviation", "ResponseTimeTimeMean", "ResponseTimeTimeMedian", "ResponseTimeTimeMode", "ResponseTimeTimeSkewFromMedian", "ResponseTimeTimeSkewFromMode", "ResponseTimeTimeCoefficientofVariation"
+    ],
+    "stripped_identifier_columns": [],
+    "coercion": "float32"
+  },
+  "models_trained": ["random_forest", "decision_tree", "gaussian_nb", "linear_svm"],
+  "model_hyperparameters": {
+    "random_forest": {
+      "bootstrap": true,
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
+      "max_depth": null,
+      "max_features": "sqrt",
+      "max_leaf_nodes": null,
+      "max_samples": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 1,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "n_estimators": 100,
+      "n_jobs": -1,
+      "oob_score": false,
+      "random_state": 42,
+      "verbose": 0,
+      "warm_start": false
+    },
+    "decision_tree": {
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "entropy",
+      "max_depth": null,
+      "max_features": null,
+      "max_leaf_nodes": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 1,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "random_state": 42,
+      "splitter": "best"
+    },
+    "gaussian_nb": {"priors": null, "var_smoothing": 1e-09},
+    "linear_svm": {
+      "C": 1.0,
+      "class_weight": null,
+      "dual": false,
+      "fit_intercept": true,
+      "intercept_scaling": 1,
+      "loss": "squared_hinge",
+      "max_iter": 2000,
+      "multi_class": "ovr",
+      "penalty": "l2",
+      "random_state": 42,
+      "tol": 0.0001,
+      "verbose": 0
+    }
+  },
+  "package_versions": {
+    "python": "3.13.15",
+    "numpy": "2.1.3",
+    "pandas": "2.3.3",
+    "scipy": "1.16.3",
+    "scikit_learn": "1.6.1",
+    "pyarrow": "23.0.1"
+  },
+  "output_artifacts": [
+    "schema_audit.json", "metrics.json", "experiment_manifest.json", "confusion_matrix_random_forest.csv", "confusion_matrix_decision_tree.csv", "confusion_matrix_gaussian_nb.csv", "confusion_matrix_linear_svm.csv"
+  ]
+}
