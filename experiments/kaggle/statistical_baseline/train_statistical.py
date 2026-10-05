@@ -45,6 +45,7 @@ try:
     from sklearn.impute import SimpleImputer
     from sklearn.metrics import (
         accuracy_score,
+        average_precision_score,
         confusion_matrix,
         f1_score,
         precision_score,
@@ -665,6 +666,60 @@ def prepare_features(
     return X_df, feature_cols, stripped_cols
 
 
+def extract_prediction_scores(model: Any, X: Any) -> Optional[np.ndarray]:
+    """Acquire continuous prediction scores for binary classification.
+
+    Uses `predict_proba(X)[:, 1]` when available; otherwise uses `decision_function(X)`.
+    Returns None if continuous scoring is unavailable or fails.
+    """
+    if hasattr(model, "predict_proba") and callable(getattr(model, "predict_proba", None)):
+        try:
+            proba = model.predict_proba(X)
+            if hasattr(proba, "ndim") and proba.ndim == 2 and proba.shape[1] >= 2:
+                return np.asarray(proba[:, 1], dtype=np.float64)
+            return np.asarray(proba, dtype=np.float64)
+        except Exception:
+            return None
+    elif hasattr(model, "decision_function") and callable(getattr(model, "decision_function", None)):
+        try:
+            scores = model.decision_function(X)
+            return np.asarray(scores, dtype=np.float64)
+        except Exception:
+            return None
+    return None
+
+
+def compute_ranking_metrics(
+    y_true: Sequence[int] | np.ndarray,
+    scores: Optional[Sequence[float] | np.ndarray],
+) -> Tuple[Optional[float], Optional[float]]:
+    """Compute ROC-AUC and PR-AUC from the same continuous score vector.
+
+    Returns (roc_auc, pr_auc). If scores are unavailable or metric calculation fails,
+    returns None for the respective metric without fabricating dummy values.
+    """
+    if scores is None or not SKLEARN_AVAILABLE or len(np.unique(y_true)) != 2:
+        return None, None
+
+    roc_auc_val: Optional[float] = None
+    pr_auc_val: Optional[float] = None
+
+    try:
+        val = float(roc_auc_score(y_true, scores))
+        if not np.isnan(val):
+            roc_auc_val = val
+    except Exception:
+        roc_auc_val = None
+
+    try:
+        val = float(average_precision_score(y_true, scores))
+        if not np.isnan(val):
+            pr_auc_val = val
+    except Exception:
+        pr_auc_val = None
+
+    return roc_auc_val, pr_auc_val
+
 def run_training_pipeline(
     data_path: Optional[Path] = None,
     task: str = "",
@@ -847,20 +902,8 @@ def run_training_pipeline(
         f1_pos = float(f1_score(y_test, y_pred, pos_label=1, zero_division=0))
         fpr = float(fp / (fp + tn)) if (fp + tn) > 0 else 0.0
 
-        roc_auc_val: Optional[float] = None
-        if hasattr(model, "predict_proba"):
-            try:
-                y_prob = model.predict_proba(cur_X_test)[:, 1]
-                roc_auc_val = float(roc_auc_score(y_test, y_prob))
-            except Exception:
-                roc_auc_val = None
-        elif hasattr(model, "decision_function"):
-            try:
-                y_score = model.decision_function(cur_X_test)
-                roc_auc_val = float(roc_auc_score(y_test, y_score))
-            except Exception:
-                roc_auc_val = None
-
+        scores = extract_prediction_scores(model, cur_X_test)
+        roc_auc_val, pr_auc_val = compute_ranking_metrics(y_test, scores)
         all_metrics[model_name] = {
             "accuracy": acc,
             "precision_macro": p_macro,
@@ -874,6 +917,7 @@ def run_training_pipeline(
             "f1_positive_class": f1_pos,
             "false_positive_rate": fpr,
             "roc_auc": roc_auc_val,
+            "pr_auc": pr_auc_val,
             "confusion_matrix": {"tn": tn, "fp": fp, "fn": fn, "tp": tp},
             "fit_time_seconds": round(fit_time, 4),
             "inference_time_seconds": round(inference_time, 4),
@@ -892,8 +936,11 @@ def run_training_pipeline(
         )
         cm_df.to_csv(cm_path, index=False)
         generated_cm_files.append(cm_filename)
+        roc_str = f"{roc_auc_val:.4f}" if roc_auc_val is not None else "null"
+        pr_str = f"{pr_auc_val:.4f}" if pr_auc_val is not None else "null"
         logger.info(
-            f"[{model_name}] Accuracy: {acc:.4f} | F1 (pos): {f1_pos:.4f} | FPR: {fpr:.4f}"
+            f"[{model_name}] Accuracy: {acc:.4f} | F1 (pos): {f1_pos:.4f} | "
+            f"ROC-AUC: {roc_str} | PR-AUC: {pr_str} | FPR: {fpr:.4f}"
         )
 
     # Save metrics.json

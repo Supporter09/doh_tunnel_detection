@@ -338,25 +338,7 @@ bash scripts/kaggle/pull_outputs.sh --force
 Mỗi phiên chạy thành công sẽ kết xuất bộ 4 thành phần tạo tác chuẩn:
 
 1. **`schema_audit.json`:** Báo cáo kiểm toán toàn bộ các tệp dữ liệu đầu vào, kích thước byte, băm SHA-256, số hàng, số thuộc tính và kiểu dữ liệu.
-2. **`metrics.json`:** Báo cáo đo lường chi tiết của các mô hình đã đánh giá trên tập kiểm thử (Test Set):
-   ```json
-   {
-     "task": "l1",
-     "split_protocol": "paper_flow_random_80_20",
-     "seed": 42,
-     "total_test_samples": 45000,
-     "models": {
-       "random_forest": {
-         "accuracy": 0.9982,
-         "precision": 0.9985,
-         "recall": 0.9979,
-         "f1_score": 0.9982,
-         "confusion_matrix": {"tp": 22450, "fp": 34, "tn": 22466, "fn": 50},
-         "fit_time_seconds": 12.4
-       }
-     }
-   }
-   ```
+2. **`metrics.json`:** Báo cáo đo lường chi tiết của các mô hình đã đánh giá trên tập kiểm thử (Test Set), bao gồm Accuracy, Macro/Weighted và Positive-class Precision/Recall/F1, FPR, ROC-AUC, PR-AUC, confusion matrix, thời gian fit và độ trễ suy luận. Với Layer 2 mất cân bằng, dùng Macro-F1, F1 của từng lớp và PR-AUC để đánh giá chính; không suy luận chất lượng chỉ từ accuracy.
 3. **`experiment_manifest.json`:** Tệp kê khai xuất xứ khoa học đầy đủ (Provenance Manifest v1.0.0), bao gồm:
    * Mã băm Git commit thực thi (`git_sha` trích xuất từ `KAGGLE_GIT_SHA`, mang giá trị `unknown_uncommitted_source` khi mã nguồn chưa commit trong Git).
    * Mã băm bối cảnh nội dung kernel (`source_snapshot_sha256` trích xuất từ `KAGGLE_SOURCE_SNAPSHOT_SHA256`), bảo đảm bằng chứng mã nguồn bất biến ngay cả khi chưa commit.
