@@ -1,12 +1,12 @@
 {
-  "mode": "train",
-  "data_file": "L2-BenignDoH-MaliciousDoH.parquet",
-  "task": "l2",
-  "label_column": "Label",
+  "mode": "audit",
+  "data_file": null,
+  "task": null,
+  "label_column": null,
   "model": "all",
   "seed": 42,
   "max_samples_per_class": null,
   "dataset_slug": "dhoogla/cicdohbrw2020",
   "dataset_version": "3",
-  "description": "Committed Layer 2 tabular benchmark: Benign DoH versus Malicious DoH using all four classical models under the reviewed paper_flow_random_80_20 protocol. Report Macro-F1, class metrics, and PR-AUC because the source labels are imbalanced."
+  "description": "Safe default after the committed Layer 1 and Layer 2 tabular benchmarks. Review and commit a task-specific configuration before any new Kaggle training run."
 }
