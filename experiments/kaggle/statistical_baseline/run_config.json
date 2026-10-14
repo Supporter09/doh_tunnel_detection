@@ -1,7 +1,7 @@
 {
   "mode": "train",
-  "data_file": "L1-DoH-NonDoH.parquet",
-  "task": "l1",
+  "data_file": "L2-BenignDoH-MaliciousDoH.parquet",
+  "task": "l2",
   "label_column": "Label",
   "model": "all",
   "seed": 42,
@@ -12,5 +12,5 @@
   "feature_ablation": "group",
   "dataset_slug": "dhoogla/cicdohbrw2020",
   "dataset_version": "3",
-  "description": "Phase 1 Layer 1 tabular experiment: benchmark five classifiers, apply validation-only Platt calibration with a 0.1% NonDoH-to-DoH target FPR, and run grouped Random Forest feature ablations."
+  "description": "Phase 1 Layer 2 tabular experiment: benchmark five classifiers, apply validation-only Platt calibration with a 0.1% Benign-DoH-to-Malicious target FPR, and run grouped Random Forest feature ablations."
 }
