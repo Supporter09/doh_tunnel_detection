@@ -1,0 +1,86 @@
+{
+  "manifest_version": "1.0.0",
+  "status": "training_success",
+  "summary_of": "Kaggle Phase 1 Layer 1 artifacts",
+  "created_at_utc": "2026-10-14T16:01:12Z",
+  "task": "l1",
+  "target_classes": ["non_doh", "doh"],
+  "dataset": {
+    "slug": "dhoogla/cicdohbrw2020",
+    "version": "3",
+    "file": "L1-DoH-NonDoH.parquet",
+    "rows": 1019117,
+    "sha256": "a6e20990d1ee21e1bb118bc4cf87eb886d26755ef5e271bb3b99bd8448009410"
+  },
+  "provenance": {
+    "git_sha": "fb2dbe7e3fe3818be23769612a3061a65afae24f",
+    "source_snapshot_sha256": "7967e12c8dea97fda343f3372eaa6234fbcb60bac0b2b84a34fee109b1d310a9",
+    "config_source": "embedded"
+  },
+  "protocol": {
+    "outer_test_split": "stratified random flow-level 80/20",
+    "seed": 42,
+    "model_train_fraction_of_total": 0.6,
+    "calibration_validation_fraction_of_total": 0.2,
+    "outer_test_samples": 203824,
+    "calibration": "Platt scaling fit only on validation scores",
+    "target_false_positive_rate": 0.001,
+    "scope": "tabular flow-statistics experiment; not packet-clump/LSTM replication"
+  },
+  "models": {
+    "random_forest": {
+      "default_macro_f1": 0.9964939199325501,
+      "default_positive_f1": 0.994831703858497,
+      "default_fpr": 0.0009394238200570317,
+      "roc_auc": 0.9992127911913374,
+      "pr_auc": 0.9986965962367145,
+      "selected_threshold": 0.6580770995583276,
+      "validation_fpr": 0.0009993870426138634,
+      "calibrated_macro_f1": 0.9963853997424365,
+      "calibrated_positive_f1": 0.994670972197594,
+      "calibrated_test_fpr": 0.0008528102763638302
+    },
+    "hist_gradient_boosting": {
+      "default_macro_f1": 0.9957335071286157,
+      "default_positive_f1": 0.9937099874946339,
+      "default_fpr": 0.001212589611704821,
+      "roc_auc": 0.9995785554660548,
+      "pr_auc": 0.9968963762683889,
+      "selected_threshold": 0.720986607905639,
+      "validation_fpr": 0.0009993870426138634,
+      "calibrated_macro_f1": 0.9956359599905285,
+      "calibrated_positive_f1": 0.9935640558591379,
+      "calibrated_test_fpr": 0.0009327612397729393
+    },
+    "decision_tree": {"default_macro_f1": 0.9945349072553012, "default_fpr": 0.002911547584148389},
+    "linear_svm": {"default_macro_f1": 0.877508770479015, "default_fpr": 0.04697785358313568},
+    "gaussian_nb": {"default_macro_f1": 0.47526748850187883, "default_fpr": 0.7017362684220345}
+  },
+  "random_forest_group_ablation": {
+    "all_features": {"macro_f1": 0.9964939199325501, "fpr": 0.0009394238200570317},
+    "without_flow_volume": {"macro_f1": 0.9962400963815748, "fpr": 0.0009727367214774938},
+    "without_packet_length": {"macro_f1": 0.9935296671930762, "fpr": 0.001199264451136636},
+    "without_packet_timing": {"macro_f1": 0.9962983310012701, "fpr": 0.0011326386482957119},
+    "without_response_timing": {"macro_f1": 0.9961071003793022, "fpr": 0.0010326999440343255}
+  },
+  "random_forest_top_features": [
+    {"feature": "PacketLengthMode", "importance": 0.26528294869346614},
+    {"feature": "Duration", "importance": 0.08284908972743425},
+    {"feature": "PacketTimeMean", "importance": 0.06191124680043226},
+    {"feature": "ResponseTimeTimeMedian", "importance": 0.04924324745740836},
+    {"feature": "PacketLengthMean", "importance": 0.047105617142048854},
+    {"feature": "FlowBytesSent", "importance": 0.045633259239147045},
+    {"feature": "PacketLengthMedian", "importance": 0.0451818040011628},
+    {"feature": "PacketTimeStandardDeviation", "importance": 0.04020531294768983},
+    {"feature": "PacketLengthStandardDeviation", "importance": 0.034357341453333426},
+    {"feature": "PacketTimeVariance", "importance": 0.03250299163558983}
+  ],
+  "ignored_artifacts": [
+    "metrics.json",
+    "experiment_manifest.json",
+    "feature_ablations.json",
+    "feature_importance_random_forest.csv",
+    "confusion_matrix_*.csv",
+    "kernel log"
+  ]
+}
