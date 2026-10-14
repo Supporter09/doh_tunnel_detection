@@ -298,7 +298,11 @@ Sau khi kiểm toán xác nhận schema dữ liệu, tiến hành chạy thực 
 | `--data-file` | `string` | `None` | Tên tệp bảng (`.parquet` hoặc `.csv`) được chọn để huấn luyện (`--csv-file` được hỗ trợ dưới dạng alias tương thích ngược; nếu bỏ trống: chỉ chạy audit). |
 | `--task` | `string` | `None` | Nhiệm vụ phân loại: `l1` (DoH vs Non-DoH) hoặc `l2` (Benign vs Malicious). |
 | `--label-column` | `string` | `None` | Tên cột nhãn ground-truth (bắt buộc nếu phát hiện nhiều cột nhãn). |
-| `--model` | `string` | `all` | Mô hình huấn luyện: `all`, `random_forest`, `decision_tree`, `gaussian_nb`, `linear_svm`. |
+| `--model` | `string` | `all` | Mô hình huấn luyện: `all`, `random_forest`, `decision_tree`, `gaussian_nb`, `linear_svm`, `hist_gradient_boosting`. |
+| `--enable-score-calibration` | `Flag` | `None` | Bật hiệu chuẩn xác suất hậu nghiệm (Platt scaling) và chọn ngưỡng vận hành khống chế FPR. |
+| `--validation-fraction` | `float` | `0.25` | Tỷ lệ phân tách outer-train thành model-train và validation cho hiệu chuẩn điểm. |
+| `--target-false-positive-rate` | `float` | `0.001` | Ngưỡng FPR tối đa mục tiêu khi lựa chọn ngưỡng vận hành trên tập validation. |
+| `--feature-ablation` | `string` | `none` | Đánh giá cắt bỏ nhóm đặc trưng (`none` hoặc `group`) bằng Random Forest. |
 | `--seed` | `int` | `42` | Random seed cố định đảm bảo tính tái lập. |
 | `--split` | `string` | `paper_flow_random_80_20` | Giao thức phân chia luồng ngẫu nhiên 80/20 theo bài báo. |
 | `--max-samples-per-class`| `int` | `None` | Giới hạn số mẫu mỗi lớp phục vụ kiểm thử nhanh (optional). |
@@ -308,6 +312,8 @@ Sau khi kiểm toán xác nhận schema dữ liệu, tiến hành chạy thực 
 > **LƯU Ý VỀ CÁC MÔ HÌNH BỊ LOẠI TRỪ:**  
 > * **Không sử dụng RBF Kernel SVM:** Tập dữ liệu luồng có quy mô hàng trăm nghìn mẫu. Thuật toán SVM nhân RBF có độ phức tạp tính toán $O(n^2)$ đến $O(n^3)$, gây quá tải và tràn bộ nhớ trên môi trường CPU của Kaggle. Thay vào đó, script sử dụng `LinearSVC` với thời gian hội tụ tuyến tính.  
 > * **Không sử dụng mạng LSTM:** Dữ liệu dạng bảng không có cấu trúc chuỗi thời gian gói tin, không thể áp dụng mạng hồi quy tuần tự.
+> * **HistGradientBoosting:** `HistGradientBoostingClassifier(random_state=seed, max_iter=100)` được tích hợp như mô hình gradient boosting chuẩn CPU determinism trong `model: "all"`.
+> * **Tạo tác Phase 1:** Khi huấn luyện Random Forest trên toàn bộ đặc trưng, tệp `feature_importance_random_forest.csv` được kết xuất; khi bật `feature_ablation: "group"`, tệp `feature_ablations.json` ghi nhận đánh giá cắt bỏ từng nhóm (`flow_volume`, `packet_length`, `packet_timing`, `response_timing`).
 
 ### 7.2. Giao Thức Phân Chia Dữ Liệu: So Sánh Đối Chứng Bài Báo
 * Script triển khai phân chia tầng ngẫu nhiên tỷ lệ 80% train / 20% test ở cấp độ luồng (`paper_flow_random_80_20`).

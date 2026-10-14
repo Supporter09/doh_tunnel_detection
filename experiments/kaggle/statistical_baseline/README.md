@@ -108,9 +108,13 @@ The runner automatically discovers and reads `run_config.json` located next to `
 | `data_file` | String \| null | `null` | Filename of the target tabular data file (`.parquet` or `.csv`). **Required when `mode` is `"train"`**. (`csv_file` is accepted as a deprecated compatibility alias). |
 | `task` | String \| null | `null` | Classification task: `"l1"` (DoH vs Non-DoH) or `"l2"` (Benign vs Malicious). **Required when `mode` is `"train"`**. |
 | `label_column` | String \| null | `null` | Target label column name. If `null`, auto-resolved if an unambiguous column exists. |
-| `model` | String | `"all"` | Model to train: `"all"`, `"random_forest"`, `"decision_tree"`, `"gaussian_nb"`, `"linear_svm"`. |
+| `model` | String | `"all"` | Model to train: `"all"`, `"random_forest"`, `"decision_tree"`, `"gaussian_nb"`, `"linear_svm"`, `"hist_gradient_boosting"`. |
 | `seed` | Int | `42` | Random seed for data split and classifiers. |
 | `max_samples_per_class` | Int \| null | `null` | Optional sample cap per class for quick testing or memory management. |
+| `enable_score_calibration` | Boolean | `false` | Enable post-hoc Platt scaling (Logistic Regression) and operating threshold selection. |
+| `validation_fraction` | Float | `0.25` | Fraction of outer-train partition reserved for calibration validation. |
+| `target_false_positive_rate` | Float | `0.001` | Target false positive rate for operating threshold selection on validation. |
+| `feature_ablation` | String | `"none"` | Feature ablation mode: `"none"` (default) or `"group"` (Random Forest group ablation). |
 | `dataset_slug` | String | `"dhoogla/cicdohbrw2020"` | Kaggle dataset identifier recorded in manifests. |
 | `dataset_version` | String \| Int | `"3"` | Dataset version tag recorded in manifests. |
 | `input_dir` | String \| null | `null` | Optional input directory override (defaults to `/kaggle/input`). |
@@ -238,8 +242,8 @@ The runner coerces source strings case-insensitively and strips whitespace. Only
 2. **Identifier Stripping (Prevent Data Leakage):**
    * Strips all host identifiers: `Flow ID`, `Source IP`, `Destination IP`, `Source Port`, `Destination Port`, `Protocol`, `Timestamp`, and MAC addresses.
 3. **Train-Only Preprocessing:**
-   * Median imputer: `SimpleImputer(strategy='median')` fit on Train fold only.
-   * Standard scaler: `StandardScaler` fit on Train fold only (used for `linear_svm`).
+   * Median imputer: `SimpleImputer(strategy='median')` fit on model-train fold only.
+   * Standard scaler: `StandardScaler` fit on model-train fold only (used for `linear_svm`).
 4. **Feature Coercion:**
    * Feature values coerced to numeric `float32`.
    * Rows with `NaN` or infinite values are dropped with logged counts (following paper: $n < 50$ NaN flows dropped).
@@ -248,6 +252,7 @@ The runner coerces source strings case-insensitively and strips whitespace. Only
    * `decision_tree`: `DecisionTreeClassifier(criterion='entropy', splitter='best', min_samples_split=2, random_state=seed)`
    * `gaussian_nb`: `GaussianNB(var_smoothing=1e-9)`
    * `linear_svm`: `LinearSVC(C=1.0, max_iter=2000, random_state=seed, dual=False)`
+   * `hist_gradient_boosting`: `HistGradientBoostingClassifier(random_state=seed, max_iter=100)` (CPU-bounded, deterministic).
    * **Explicit Prohibitions:** No RBF SVM (prohibitive $O(N^2)$ to $O(N^3)$ complexity causes CPU hangs on large datasets), No LSTM, No model weight checkpoints.
 
 ---
@@ -266,7 +271,11 @@ CLI flags override values in `run_config.json` for local experimentation:
 | `--audit-only` | Flag | `False` | Forces audit mode and exits successfully after audit. |
 | `--task` | String | `None` | Classification task: `l1` (DoH vs Non-DoH) or `l2` (Benign vs Malicious). |
 | `--label-column` | String | `None` | Target column name. Required if column name is non-standard. |
-| `--model` | String | `None` | Model to train: `all`, `random_forest`, `decision_tree`, `gaussian_nb`, `linear_svm`. |
+| `--model` | String | `None` | Model to train: `all`, `random_forest`, `decision_tree`, `gaussian_nb`, `linear_svm`, `hist_gradient_boosting`. |
+| `--enable-score-calibration` | Flag | `None` | Enables post-hoc score calibration and threshold selection. |
+| `--validation-fraction` | Float | `None` | Calibration validation split fraction (default: 0.25). |
+| `--target-false-positive-rate` | Float | `None` | Target validation FPR for operating threshold selection (default: 0.001). |
+| `--feature-ablation` | String | `None` | Feature ablation mode: `none` or `group`. |
 | `--seed` | Int | `None` | Random seed for data split and classifiers. |
 | `--max-samples-per-class` | Int | `None` | Optional cap per class for quick testing or memory management. |
 | `--dataset-slug` | String | `None` | Kaggle dataset identifier. |
@@ -287,6 +296,10 @@ Every completed run produces small, auditable artifacts in `--output-dir`, clean
    * **In Training Mode:** Emitted with `status: "training_success"`. Full provenance metadata: Git commit SHA, source snapshot hash, dataset slug, dataset version, random seed, split protocol (`paper_flow_random_80_20`), train/test sample counts, class distributions, feature names, stripped identifier columns, hyperparameter records, package versions, and strict non-claim scope statement.
 4. `confusion_matrix_<model>.csv` (Training mode only):
    Formatted confusion matrix table with canonical class names for each trained baseline model.
+5. `feature_importance_random_forest.csv` (Training mode, Random Forest on all features):
+   Ranks all features by Random Forest Gini feature importance in descending order.
+6. `feature_ablations.json` (Training mode, when `feature_ablation: "group"`):
+   Evaluates Random Forest on all features and with each fixed group removed (`flow_volume`, `packet_length`, `packet_timing`, `response_timing`), omitting nonexistent columns without failure.
 
 ---
 

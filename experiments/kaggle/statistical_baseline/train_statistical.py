@@ -3,7 +3,7 @@
 
 Scope:
     Evaluates tabular/statistical baseline classifiers (Random Forest, Decision Tree,
-    Gaussian Naive Bayes, Linear SVM) on summary flow features from CIRA-CIC-DoHBrw-2020.
+    Gaussian Naive Bayes, Linear SVM, HistGradientBoosting) on summary flow features from CIRA-CIC-DoHBrw-2020.
     This script strictly does NOT replicate packet-clump time-series sequence models (LSTM),
     which require packet order, direction, and inter-arrival timestamps from raw PCAP traces.
 
@@ -12,6 +12,8 @@ Artifacts emitted to --output-dir:
     - metrics.json
     - experiment_manifest.json
     - confusion_matrix_<model>.csv
+    - feature_ablations.json (optional: emitted when feature_ablation == "group")
+    - feature_importance_random_forest.csv (optional: emitted for Random Forest on all features)
 
 Security and Boundaries:
     - Never logs credentials, API keys, or personal filesystem paths.
@@ -41,8 +43,12 @@ except ImportError:
 
 try:
     import sklearn
-    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.ensemble import (
+        HistGradientBoostingClassifier,
+        RandomForestClassifier,
+    )
     from sklearn.impute import SimpleImputer
+    from sklearn.linear_model import LogisticRegression
     from sklearn.metrics import (
         accuracy_score,
         average_precision_score,
@@ -720,6 +726,89 @@ def compute_ranking_metrics(
 
     return roc_auc_val, pr_auc_val
 
+def select_operating_threshold(
+    y_val: Sequence[int] | np.ndarray,
+    val_calibrated_scores: Sequence[float] | np.ndarray,
+    target_fpr: float = 0.001,
+) -> Tuple[float, float, bool]:
+    """Select operating threshold from calibrated validation scores so validation FPR <= target_fpr.
+
+    Evaluates candidate thresholds from validation scores to select the operating threshold
+    that maximizes TPR (recall) while satisfying FPR <= target_fpr when feasible.
+    If target_fpr is infeasible, selects the threshold minimizing FPR.
+
+    Returns:
+        (selected_threshold, achieved_validation_fpr, is_feasible)
+    """
+    y_val_arr = np.asarray(y_val, dtype=np.int64)
+    scores_arr = np.asarray(val_calibrated_scores, dtype=np.float64)
+
+    if len(y_val_arr) == 0 or len(scores_arr) == 0:
+        return 0.5, 0.0, False
+
+    neg_mask = (y_val_arr == 0)
+    pos_mask = (y_val_arr == 1)
+    n_neg = int(np.sum(neg_mask))
+    n_pos = int(np.sum(pos_mask))
+
+    if n_neg == 0:
+        return 0.5, 0.0, True
+
+    # Candidate thresholds: unique scores on validation, 0.5, 1.0, and just above max score
+    unique_scores = np.unique(scores_arr)
+    candidates = set(unique_scores.tolist())
+    candidates.add(0.5)
+    candidates.add(1.0)
+    max_score = float(np.max(scores_arr))
+    candidates.add(max_score + 1e-6)
+
+    evaluated: List[Tuple[float, float, float, float]] = []
+    for tau in candidates:
+        pred_pos = (scores_arr >= tau)
+        fp = int(np.sum(neg_mask & pred_pos))
+        tp = int(np.sum(pos_mask & pred_pos))
+        cur_fpr = float(fp / n_neg)
+        cur_tpr = float(tp / n_pos) if n_pos > 0 else 0.0
+        evaluated.append((cur_fpr, -cur_tpr, float(tau), cur_tpr))
+
+    feasible = [item for item in evaluated if item[0] <= target_fpr + 1e-12]
+
+    if feasible:
+        feasible.sort(key=lambda x: (x[1], x[2]))
+        best_fpr, neg_tpr, best_tau, best_tpr = feasible[0]
+        return float(best_tau), float(best_fpr), True
+    else:
+        evaluated.sort(key=lambda x: (x[0], x[1], x[2]))
+        best_fpr, neg_tpr, best_tau, best_tpr = evaluated[0]
+        return float(best_tau), float(best_fpr), False
+
+
+def classify_feature_group(col_name: str) -> Optional[str]:
+    """Classify feature column name into one of four fixed groups.
+
+    Groups:
+        - flow_volume: Duration + FlowBytes* / Flow*Rate
+        - packet_length: PacketLength*
+        - packet_timing: PacketTime*
+        - response_timing: ResponseTime*
+    """
+    import re
+    col_norm = re.sub(r"[\s_]+", "", str(col_name)).lower()
+    if col_norm == "duration":
+        return "flow_volume"
+    if col_norm.startswith("flowbytes"):
+        return "flow_volume"
+    if col_norm.startswith("flow") and col_norm.endswith("rate"):
+        return "flow_volume"
+    if col_norm.startswith("packetlength"):
+        return "packet_length"
+    if col_norm.startswith("packettime"):
+        return "packet_timing"
+    if col_norm.startswith("responsetime"):
+        return "response_timing"
+    return None
+
+
 def run_training_pipeline(
     data_path: Optional[Path] = None,
     task: str = "",
@@ -734,14 +823,29 @@ def run_training_pipeline(
     run_config: Optional[Dict[str, Any]] = None,
     config_source: str = "defaults",
     csv_path: Optional[Path] = None,
+    enable_score_calibration: bool = False,
+    validation_fraction: float = 0.25,
+    target_false_positive_rate: float = 0.001,
+    feature_ablation: str = "none",
 ) -> None:
     """Execute tabular baseline training and emit small reproducibility artifacts."""
+    if run_config:
+        enable_score_calibration = bool(run_config.get("enable_score_calibration", enable_score_calibration))
+        validation_fraction = float(run_config.get("validation_fraction", validation_fraction))
+        target_false_positive_rate = float(run_config.get("target_false_positive_rate", target_false_positive_rate))
+        feature_ablation = str(run_config.get("feature_ablation", feature_ablation))
     if data_path is None and csv_path is not None:
         data_path = csv_path
     if data_path is None:
         raise ValueError("data_path must be provided to run_training_pipeline")
     if models_to_run is None:
-        models_to_run = ["random_forest", "decision_tree", "gaussian_nb", "linear_svm"]
+        models_to_run = [
+            "random_forest",
+            "decision_tree",
+            "gaussian_nb",
+            "linear_svm",
+            "hist_gradient_boosting",
+        ]
     if output_dir is None:
         output_dir = Path("/kaggle/working")
     if audit_data is None:
@@ -809,26 +913,59 @@ def run_training_pipeline(
 
     # 80/20 Stratified Flow Split (Paper comparison protocol: paper_flow_random_80_20)
     split_protocol_name = "paper_flow_random_80_20"
-    logger.info(f"Performing stratified 80/20 split (protocol: {split_protocol_name}, seed={seed})")
-    X_train, X_test, y_train, y_test = train_test_split(
+    logger.info(f"Performing stratified 80/20 outer test split (protocol: {split_protocol_name}, seed={seed})")
+    X_outer_train, X_test, y_outer_train, y_test = train_test_split(
         X, y, test_size=0.20, random_state=seed, stratify=y, shuffle=True
     )
 
+    if enable_score_calibration:
+        logger.info(
+            f"Score calibration enabled: stratifying outer-train (fraction={validation_fraction}, seed={seed}) "
+            f"into model-train and calibration-validation."
+        )
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_outer_train,
+            y_outer_train,
+            test_size=validation_fraction,
+            random_state=seed,
+            stratify=y_outer_train,
+            shuffle=True,
+        )
+    else:
+        X_train = X_outer_train
+        y_train = y_outer_train
+        X_val = None
+        y_val = None
+
     train_dist = {target_names[int(c)]: int(np.sum(y_train == c)) for c in (0, 1)}
     test_dist = {target_names[int(c)]: int(np.sum(y_test == c)) for c in (0, 1)}
-    logger.info(f"Train split samples: {len(y_train)} ({train_dist})")
-    logger.info(f"Test split samples:  {len(y_test)} ({test_dist})")
+    val_dist = (
+        {target_names[int(c)]: int(np.sum(y_val == c)) for c in (0, 1)}
+        if y_val is not None
+        else None
+    )
+    logger.info(f"Model-train split samples: {len(y_train)} ({train_dist})")
+    if X_val is not None:
+        logger.info(f"Calibration-validation samples: {len(y_val)} ({val_dist})")
+    logger.info(f"Outer-test split samples:  {len(y_test)} ({test_dist})")
 
-    # Fit Imputer strictly on Train fold if any NaNs remain
-    if np.isnan(X_train).any() or np.isnan(X_test).any():
-        logger.info("Applying SimpleImputer (median) fit on Train fold only.")
+    # Fit Imputer strictly on model-train fold if any NaNs remain
+    if (
+        np.isnan(X_train).any()
+        or np.isnan(X_test).any()
+        or (X_val is not None and np.isnan(X_val).any())
+    ):
+        logger.info("Applying SimpleImputer (median) fit on model-train fold only.")
         imputer = SimpleImputer(strategy="median")
         X_train = imputer.fit_transform(X_train)
+        if X_val is not None:
+            X_val = imputer.transform(X_val)
         X_test = imputer.transform(X_test)
 
-    # Fit StandardScaler strictly on Train fold for Linear SVM
+    # Fit StandardScaler strictly on model-train fold for Linear SVM
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
+    X_val_scaled = scaler.transform(X_val) if X_val is not None else None
     X_test_scaled = scaler.transform(X_test)
 
     # Baseline models dictionary
@@ -858,11 +995,19 @@ def run_training_pipeline(
             LinearSVC(C=1.0, max_iter=2000, random_state=seed, dual=False),
             True,
         ),
+        "hist_gradient_boosting": lambda: (
+            HistGradientBoostingClassifier(
+                random_state=seed,
+                max_iter=100,
+            ),
+            False,
+        ),
     }
 
     all_metrics: Dict[str, Any] = {}
     model_params_record: Dict[str, Any] = {}
     generated_cm_files: List[str] = []
+    trained_rf_model = None
 
     for model_name in models_to_run:
         if model_name not in model_factories:
@@ -872,12 +1017,16 @@ def run_training_pipeline(
         model, requires_scaling = model_factories[model_name]()
         model_params_record[model_name] = model.get_params()
         cur_X_train = X_train_scaled if requires_scaling else X_train
+        cur_X_val = (X_val_scaled if requires_scaling else X_val) if X_val is not None else None
         cur_X_test = X_test_scaled if requires_scaling else X_test
 
         logger.info(f"Training model: {model_name}...")
         t0 = time.time()
         model.fit(cur_X_train, y_train)
         fit_time = time.time() - t0
+
+        if model_name == "random_forest":
+            trained_rf_model = model
 
         logger.info(f"Evaluating {model_name} on test set...")
         t1 = time.time()
@@ -904,7 +1053,7 @@ def run_training_pipeline(
 
         scores = extract_prediction_scores(model, cur_X_test)
         roc_auc_val, pr_auc_val = compute_ranking_metrics(y_test, scores)
-        all_metrics[model_name] = {
+        model_metrics: Dict[str, Any] = {
             "accuracy": acc,
             "precision_macro": p_macro,
             "recall_macro": r_macro,
@@ -923,6 +1072,74 @@ def run_training_pipeline(
             "inference_time_seconds": round(inference_time, 4),
             "inference_latency_per_sample_ms": round((inference_time / len(y_test)) * 1000, 6),
         }
+
+        # If calibration is enabled, perform Platt scaling and threshold selection
+        if enable_score_calibration and cur_X_val is not None and y_val is not None:
+            model_metrics["default_threshold_metrics"] = {
+                "accuracy": acc,
+                "precision_macro": p_macro,
+                "recall_macro": r_macro,
+                "f1_macro": f1_macro_val,
+                "precision_weighted": p_weighted,
+                "recall_weighted": r_weighted,
+                "f1_weighted": f1_weighted_val,
+                "precision_positive_class": p_pos,
+                "recall_positive_class": r_pos,
+                "f1_positive_class": f1_pos,
+                "false_positive_rate": fpr,
+                "confusion_matrix": {"tn": tn, "fp": fp, "fn": fn, "tp": tp},
+            }
+
+            val_scores = extract_prediction_scores(model, cur_X_val)
+            if val_scores is not None and scores is not None and len(np.unique(y_val)) >= 2:
+                try:
+                    calibrator = LogisticRegression(random_state=seed, solver="lbfgs")
+                    calibrator.fit(val_scores.reshape(-1, 1), y_val)
+                    val_calibrated = calibrator.predict_proba(val_scores.reshape(-1, 1))[:, 1]
+                    test_calibrated = calibrator.predict_proba(scores.reshape(-1, 1))[:, 1]
+
+                    selected_tau, achieved_val_fpr, is_feasible = select_operating_threshold(
+                        y_val, val_calibrated, target_fpr=target_false_positive_rate
+                    )
+
+                    test_pred_calibrated = (test_calibrated >= selected_tau).astype(int)
+                    c_cm = confusion_matrix(y_test, test_pred_calibrated, labels=[0, 1])
+                    c_tn, c_fp, c_fn, c_tp = [int(v) for v in c_cm.ravel()]
+
+                    calibrated_metrics = {
+                        "accuracy": float(accuracy_score(y_test, test_pred_calibrated)),
+                        "precision_macro": float(precision_score(y_test, test_pred_calibrated, average="macro", zero_division=0)),
+                        "recall_macro": float(recall_score(y_test, test_pred_calibrated, average="macro", zero_division=0)),
+                        "f1_macro": float(f1_score(y_test, test_pred_calibrated, average="macro", zero_division=0)),
+                        "precision_weighted": float(precision_score(y_test, test_pred_calibrated, average="weighted", zero_division=0)),
+                        "recall_weighted": float(recall_score(y_test, test_pred_calibrated, average="weighted", zero_division=0)),
+                        "f1_weighted": float(f1_score(y_test, test_pred_calibrated, average="weighted", zero_division=0)),
+                        "precision_positive_class": float(precision_score(y_test, test_pred_calibrated, pos_label=1, zero_division=0)),
+                        "recall_positive_class": float(recall_score(y_test, test_pred_calibrated, pos_label=1, zero_division=0)),
+                        "f1_positive_class": float(f1_score(y_test, test_pred_calibrated, pos_label=1, zero_division=0)),
+                        "false_positive_rate": float(c_fp / (c_fp + c_tn)) if (c_fp + c_tn) > 0 else 0.0,
+                        "confusion_matrix": {"tn": c_tn, "fp": c_fp, "fn": c_fn, "tp": c_tp},
+                    }
+
+                    model_metrics["selected_threshold"] = float(selected_tau)
+                    model_metrics["validation_fpr"] = float(achieved_val_fpr)
+                    model_metrics["calibrated_threshold_metrics"] = calibrated_metrics
+                    model_metrics["calibration"] = {
+                        "method": "platt_scaling",
+                        "validation_fraction": float(validation_fraction),
+                        "target_false_positive_rate": float(target_false_positive_rate),
+                        "selected_threshold": float(selected_tau),
+                        "validation_fpr": float(achieved_val_fpr),
+                        "validation_samples": int(len(y_val)),
+                        "validation_class_distribution": val_dist,
+                        "threshold_feasible": bool(is_feasible),
+                    }
+                except Exception as exc:
+                    logger.warning(f"Score calibration failed for {model_name}: {exc}")
+            else:
+                logger.info(f"Model '{model_name}' lacks continuous scores; omitting threshold metrics.")
+
+        all_metrics[model_name] = model_metrics
 
         # Write confusion matrix CSV
         cm_filename = f"confusion_matrix_{model_name}.csv"
@@ -943,6 +1160,194 @@ def run_training_pipeline(
             f"ROC-AUC: {roc_str} | PR-AUC: {pr_str} | FPR: {fpr:.4f}"
         )
 
+    # Emit feature_importance_random_forest.csv only for Random Forest trained with all features
+    if trained_rf_model is not None and hasattr(trained_rf_model, "feature_importances_"):
+        rf_importances = trained_rf_model.feature_importances_
+        fi_df = pd.DataFrame({
+            "feature": feature_cols,
+            "importance": rf_importances,
+        }).sort_values(by="importance", ascending=False).reset_index(drop=True)
+        fi_path = output_dir / "feature_importance_random_forest.csv"
+        fi_df.to_csv(fi_path, index=False)
+        logger.info(f"Saved Random Forest feature importances to {fi_path.name}")
+
+    # Feature ablation with Random Forest
+    if feature_ablation == "group":
+        logger.info("Executing group feature ablation study with Random Forest...")
+        fixed_groups = ["flow_volume", "packet_length", "packet_timing", "response_timing"]
+
+        if trained_rf_model is None:
+            rf_all = RandomForestClassifier(
+                n_estimators=100,
+                criterion="gini",
+                min_samples_split=2,
+                random_state=seed,
+                n_jobs=-1,
+            )
+            rf_all.fit(X_train, y_train)
+            trained_rf_model = rf_all
+            if hasattr(rf_all, "feature_importances_"):
+                fi_df = pd.DataFrame({
+                    "feature": feature_cols,
+                    "importance": rf_all.feature_importances_,
+                }).sort_values(by="importance", ascending=False).reset_index(drop=True)
+                fi_path = output_dir / "feature_importance_random_forest.csv"
+                fi_df.to_csv(fi_path, index=False)
+                logger.info(f"Saved Random Forest feature importances to {fi_path.name}")
+
+        def evaluate_rf_subset(
+            rf_sub_model: Any,
+            sub_X_test: np.ndarray,
+            sub_X_val: Optional[np.ndarray],
+            sub_features: List[str],
+            removed_group_name: Optional[str],
+            removed_cols_list: List[str],
+        ) -> Dict[str, Any]:
+            y_p = rf_sub_model.predict(sub_X_test)
+            s_cm = confusion_matrix(y_test, y_p, labels=[0, 1])
+            s_tn, s_fp, s_fn, s_tp = [int(v) for v in s_cm.ravel()]
+            s_acc = float(accuracy_score(y_test, y_p))
+            s_f1_macro = float(f1_score(y_test, y_p, average="macro", zero_division=0))
+            s_f1_pos = float(f1_score(y_test, y_p, pos_label=1, zero_division=0))
+            s_fpr = float(s_fp / (s_fp + s_tn)) if (s_fp + s_tn) > 0 else 0.0
+            s_scores = extract_prediction_scores(rf_sub_model, sub_X_test)
+            s_roc, s_pr = compute_ranking_metrics(y_test, s_scores)
+            res: Dict[str, Any] = {
+                "removed_group": removed_group_name,
+                "removed_features": removed_cols_list,
+                "features_used_count": len(sub_features),
+                "features_used": sub_features,
+                "accuracy": s_acc,
+                "f1_macro": s_f1_macro,
+                "f1_positive_class": s_f1_pos,
+                "false_positive_rate": s_fpr,
+                "roc_auc": s_roc,
+                "pr_auc": s_pr,
+                "confusion_matrix": {"tn": s_tn, "fp": s_fp, "fn": s_fn, "tp": s_tp},
+            }
+            if enable_score_calibration and sub_X_val is not None and y_val is not None:
+                sub_val_scores = extract_prediction_scores(rf_sub_model, sub_X_val)
+                if sub_val_scores is not None and s_scores is not None and len(np.unique(y_val)) >= 2:
+                    try:
+                        cal = LogisticRegression(random_state=seed, solver="lbfgs")
+                        cal.fit(sub_val_scores.reshape(-1, 1), y_val)
+                        v_cal = cal.predict_proba(sub_val_scores.reshape(-1, 1))[:, 1]
+                        t_cal = cal.predict_proba(s_scores.reshape(-1, 1))[:, 1]
+                        s_tau, s_val_fpr, s_feas = select_operating_threshold(
+                            y_val, v_cal, target_fpr=target_false_positive_rate
+                        )
+                        t_pred_cal = (t_cal >= s_tau).astype(int)
+                        c_cm2 = confusion_matrix(y_test, t_pred_cal, labels=[0, 1])
+                        c2_tn, c2_fp, c2_fn, c2_tp = [int(v) for v in c_cm2.ravel()]
+                        res["selected_threshold"] = float(s_tau)
+                        res["validation_fpr"] = float(s_val_fpr)
+                        res["calibrated_threshold_metrics"] = {
+                            "accuracy": float(accuracy_score(y_test, t_pred_cal)),
+                            "f1_macro": float(f1_score(y_test, t_pred_cal, average="macro", zero_division=0)),
+                            "f1_positive_class": float(f1_score(y_test, t_pred_cal, pos_label=1, zero_division=0)),
+                            "false_positive_rate": float(c2_fp / (c2_fp + c2_tn)) if (c2_fp + c2_tn) > 0 else 0.0,
+                            "confusion_matrix": {"tn": c2_tn, "fp": c2_fp, "fn": c2_fn, "tp": c2_tp},
+                        }
+                    except Exception as exc:
+                        logger.warning(f"Ablation calibration failed for group {removed_group_name}: {exc}")
+            res["metrics"] = {
+                "accuracy": res["accuracy"],
+                "f1_macro": res["f1_macro"],
+                "f1_positive_class": res["f1_positive_class"],
+                "false_positive_rate": res["false_positive_rate"],
+                "roc_auc": res["roc_auc"],
+                "pr_auc": res["pr_auc"],
+                "confusion_matrix": res["confusion_matrix"],
+            }
+            return res
+
+        ablations_dict: Dict[str, Any] = {}
+        ablations_dict["all_features"] = evaluate_rf_subset(
+            trained_rf_model,
+            X_test,
+            X_val,
+            feature_cols,
+            removed_group_name=None,
+            removed_cols_list=[],
+        )
+
+        for grp in fixed_groups:
+            cols_to_remove = [c for c in feature_cols if classify_feature_group(c) == grp]
+            if not cols_to_remove:
+                logger.info(f"Group '{grp}' has no matching columns in dataset; nonexistent columns omitted.")
+                ablations_dict[grp] = {
+                    "removed_group": grp,
+                    "removed_features": [],
+                    "features_used_count": len(feature_cols),
+                    "features_used": feature_cols,
+                    "note": "No matching features found in dataset; nonexistent columns omitted.",
+                    **ablations_dict["all_features"],
+                }
+                continue
+
+            remaining_cols = [c for c in feature_cols if c not in cols_to_remove]
+            if not remaining_cols:
+                logger.warning(f"Removing group '{grp}' leaves 0 features. Skipping model training.")
+                ablations_dict[grp] = {
+                    "removed_group": grp,
+                    "removed_features": cols_to_remove,
+                    "features_used_count": 0,
+                    "status": "skipped_no_remaining_features",
+                }
+                continue
+
+            rem_indices = [feature_cols.index(c) for c in remaining_cols]
+            sub_X_train = X_train[:, rem_indices]
+            sub_X_val = X_val[:, rem_indices] if X_val is not None else None
+            sub_X_test = X_test[:, rem_indices]
+
+            if (
+                np.isnan(sub_X_train).any()
+                or np.isnan(sub_X_test).any()
+                or (sub_X_val is not None and np.isnan(sub_X_val).any())
+            ):
+                sub_imputer = SimpleImputer(strategy="median")
+                sub_X_train = sub_imputer.fit_transform(sub_X_train)
+                if sub_X_val is not None:
+                    sub_X_val = sub_imputer.transform(sub_X_val)
+                sub_X_test = sub_imputer.transform(sub_X_test)
+
+            logger.info(f"Training ablation Random Forest without '{grp}' ({len(remaining_cols)} features remaining)...")
+            rf_sub = RandomForestClassifier(
+                n_estimators=100,
+                criterion="gini",
+                min_samples_split=2,
+                random_state=seed,
+                n_jobs=-1,
+            )
+            rf_sub.fit(sub_X_train, y_train)
+
+            ablations_dict[grp] = evaluate_rf_subset(
+                rf_sub,
+                sub_X_test,
+                sub_X_val,
+                remaining_cols,
+                removed_group_name=grp,
+                removed_cols_list=cols_to_remove,
+            )
+
+        ablation_payload = {
+            "manifest_version": "1.0.0",
+            "created_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "task": task,
+            "seed": seed,
+            "model": "random_forest",
+            "feature_ablation_mode": "group",
+            "fixed_groups": fixed_groups,
+            "ablations": ablations_dict,
+            "groups": ablations_dict,
+            **ablations_dict,
+        }
+        ablation_path = output_dir / "feature_ablations.json"
+        with open(ablation_path, "w", encoding="utf-8") as f:
+            json.dump(ablation_payload, f, indent=2)
+        logger.info(f"Saved feature ablation metrics to {ablation_path.name}")
+
     # Save metrics.json
     metrics_payload = {
         "manifest_version": "1.0.0",
@@ -954,6 +1359,10 @@ def run_training_pipeline(
         "split_protocol": split_protocol_name,
         "seed": seed,
         "total_test_samples": len(y_test),
+        "enable_score_calibration": enable_score_calibration,
+        "validation_fraction": validation_fraction if enable_score_calibration else None,
+        "target_false_positive_rate": target_false_positive_rate if enable_score_calibration else None,
+        "feature_ablation": feature_ablation,
         "models": all_metrics,
     }
     metrics_path = output_dir / "metrics.json"
@@ -994,7 +1403,8 @@ def run_training_pipeline(
         "selected_file_format": file_format,
         "non_claim_scope": (
             "This experiment evaluates statistical/tabular baseline classifiers "
-            "(Random Forest, Decision Tree, Gaussian Naive Bayes, Linear SVM) on summary "
+            "(Random Forest, Decision Tree, Gaussian Naive Bayes, Linear SVM, "
+            "HistGradientBoosting) on summary "
             "flow features. It strictly does NOT represent a replication of the packet-clump "
             "time-series sequence LSTM model from MontazeriShatoori et al. (2020), which requires "
             "ordered packet sequences, direction, and inter-arrival timestamps from raw PCAPs."
@@ -1018,6 +1428,7 @@ def run_training_pipeline(
             "test_samples": len(y_test),
             "train_class_distribution": train_dist,
             "test_class_distribution": test_dist,
+            **({"validation_samples": len(y_val), "validation_class_distribution": val_dist} if y_val is not None else {}),
         },
         "features": {
             "count": len(feature_cols),
@@ -1040,6 +1451,8 @@ def run_training_pipeline(
             "metrics.json",
             "experiment_manifest.json",
             *generated_cm_files,
+            *(["feature_importance_random_forest.csv"] if (output_dir / "feature_importance_random_forest.csv").is_file() else []),
+            *(["feature_ablations.json"] if (output_dir / "feature_ablations.json").is_file() else []),
         ],
     }
 
@@ -1061,6 +1474,10 @@ ALLOWED_CONFIG_KEYS: Set[str] = {
     "model",
     "seed",
     "max_samples_per_class",
+    "enable_score_calibration",
+    "validation_fraction",
+    "target_false_positive_rate",
+    "feature_ablation",
     "dataset_slug",
     "dataset_version",
     "input_dir",
@@ -1073,6 +1490,7 @@ VALID_MODELS: Set[str] = {
     "decision_tree",
     "gaussian_nb",
     "linear_svm",
+    "hist_gradient_boosting",
 }
 
 
@@ -1136,6 +1554,32 @@ def validate_raw_config(cfg: Dict[str, Any]) -> None:
                 f"Invalid 'max_samples_per_class' in configuration: must be positive integer or null, got {cfg['max_samples_per_class']!r}."
             )
 
+    if "enable_score_calibration" in cfg and cfg["enable_score_calibration"] is not None:
+        if not isinstance(cfg["enable_score_calibration"], bool):
+            raise ValueError(
+                f"Invalid 'enable_score_calibration' in configuration: must be boolean, got {type(cfg['enable_score_calibration']).__name__}."
+            )
+
+    if "validation_fraction" in cfg and cfg["validation_fraction"] is not None:
+        val_frac = cfg["validation_fraction"]
+        if not isinstance(val_frac, (int, float)) or isinstance(val_frac, bool) or not (0.0 < float(val_frac) < 1.0):
+            raise ValueError(
+                f"Invalid 'validation_fraction' in configuration: must be float in (0.0, 1.0), got {val_frac!r}."
+            )
+
+    if "target_false_positive_rate" in cfg and cfg["target_false_positive_rate"] is not None:
+        target_fpr = cfg["target_false_positive_rate"]
+        if not isinstance(target_fpr, (int, float)) or isinstance(target_fpr, bool) or not (0.0 < float(target_fpr) < 1.0):
+            raise ValueError(
+                f"Invalid 'target_false_positive_rate' in configuration: must be float in (0.0, 1.0), got {target_fpr!r}."
+            )
+
+    if "feature_ablation" in cfg and cfg["feature_ablation"] is not None:
+        if cfg["feature_ablation"] not in ("none", "group"):
+            raise ValueError(
+                f"Invalid 'feature_ablation' in configuration: '{cfg['feature_ablation']}'. Must be 'none' or 'group'."
+            )
+
     if "dataset_slug" in cfg and cfg["dataset_slug"] is not None:
         if not isinstance(cfg["dataset_slug"], str) or not cfg["dataset_slug"].strip():
             raise ValueError("Invalid 'dataset_slug' in configuration: must be non-empty string.")
@@ -1179,6 +1623,30 @@ def validate_resolved_config(resolved: Dict[str, Any]) -> None:
             raise ValueError(
                 f"Invalid max_samples_per_class: '{max_samples}'. Must be positive integer or None."
             )
+
+    enable_cal = resolved.get("enable_score_calibration", False)
+    if not isinstance(enable_cal, bool):
+        raise ValueError(
+            f"Invalid 'enable_score_calibration': must be boolean, got {type(enable_cal).__name__}."
+        )
+
+    val_frac = resolved.get("validation_fraction", 0.25)
+    if not isinstance(val_frac, (int, float)) or isinstance(val_frac, bool) or not (0.0 < float(val_frac) < 1.0):
+        raise ValueError(
+            f"Invalid 'validation_fraction': must be float in (0.0, 1.0), got {val_frac!r}."
+        )
+
+    target_fpr = resolved.get("target_false_positive_rate", 0.001)
+    if not isinstance(target_fpr, (int, float)) or isinstance(target_fpr, bool) or not (0.0 < float(target_fpr) < 1.0):
+        raise ValueError(
+            f"Invalid 'target_false_positive_rate': must be float in (0.0, 1.0), got {target_fpr!r}."
+        )
+
+    feature_ablation = resolved.get("feature_ablation", "none")
+    if feature_ablation not in ("none", "group"):
+        raise ValueError(
+            f"Invalid 'feature_ablation': '{feature_ablation}'. Must be 'none' or 'group'."
+        )
 
     if mode == "train":
         data_file = resolved.get("data_file") or resolved.get("csv_file")
@@ -1237,7 +1705,8 @@ def write_audit_artifacts(
         "run_config": resolved_config,
         "non_claim_scope": (
             "This experiment evaluates statistical/tabular baseline classifiers "
-            "(Random Forest, Decision Tree, Gaussian Naive Bayes, Linear SVM) on summary "
+            "(Random Forest, Decision Tree, Gaussian Naive Bayes, Linear SVM, "
+            "HistGradientBoosting) on summary "
             "flow features. It strictly does NOT represent a replication of the packet-clump "
             "time-series sequence LSTM model from MontazeriShatoori et al. (2020), which requires "
             "ordered packet sequences, direction, and inter-arrival timestamps from raw PCAPs."
@@ -1360,6 +1829,10 @@ def resolve_run_configuration(
         "max_samples_per_class": None,
         "dataset_slug": "dhoogla/cicdohbrw2020",
         "dataset_version": "3",
+        "enable_score_calibration": False,
+        "validation_fraction": 0.25,
+        "target_false_positive_rate": 0.001,
+        "feature_ablation": "none",
     }
 
     # Apply raw_config to base defaults
@@ -1413,6 +1886,14 @@ def resolve_run_configuration(
     # Mode determination:
     if cli_args.audit_only:
         resolved["mode"] = "audit"
+    if cli_args.enable_score_calibration is not None:
+        resolved["enable_score_calibration"] = cli_args.enable_score_calibration
+    if cli_args.validation_fraction is not None:
+        resolved["validation_fraction"] = cli_args.validation_fraction
+    if cli_args.target_false_positive_rate is not None:
+        resolved["target_false_positive_rate"] = cli_args.target_false_positive_rate
+    if cli_args.feature_ablation is not None:
+        resolved["feature_ablation"] = cli_args.feature_ablation
     elif cli_args.mode is not None:
         resolved["mode"] = cli_args.mode
     elif cli_args.data_file is not None or cli_args.csv_file is not None:
@@ -1487,9 +1968,41 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model",
         type=str,
-        choices=["all", "random_forest", "decision_tree", "gaussian_nb", "linear_svm"],
+        choices=["all", "random_forest", "decision_tree", "gaussian_nb", "linear_svm", "hist_gradient_boosting"],
         default=None,
         help="Model baseline to train and evaluate (default: all).",
+    )
+    parser.add_argument(
+        "--enable-score-calibration",
+        dest="enable_score_calibration",
+        action="store_true",
+        default=None,
+        help="Enable post-hoc probability score calibration and threshold selection.",
+    )
+    parser.add_argument(
+        "--no-enable-score-calibration",
+        dest="enable_score_calibration",
+        action="store_false",
+        help="Disable post-hoc probability score calibration.",
+    )
+    parser.add_argument(
+        "--validation-fraction",
+        type=float,
+        default=None,
+        help="Fraction of outer-train partition reserved for calibration validation (default: 0.25).",
+    )
+    parser.add_argument(
+        "--target-false-positive-rate",
+        type=float,
+        default=None,
+        help="Target false positive rate for operating threshold selection (default: 0.001).",
+    )
+    parser.add_argument(
+        "--feature-ablation",
+        type=str,
+        choices=["none", "group"],
+        default=None,
+        help="Feature ablation mode: 'none' (default) or 'group'.",
     )
     parser.add_argument(
         "--seed",
@@ -1601,7 +2114,13 @@ def main() -> int:
 
     model_arg = config.get("model", "all")
     models_to_run = (
-        ["random_forest", "decision_tree", "gaussian_nb", "linear_svm"]
+        [
+            "random_forest",
+            "decision_tree",
+            "gaussian_nb",
+            "linear_svm",
+            "hist_gradient_boosting",
+        ]
         if model_arg == "all"
         else [model_arg]
     )
@@ -1620,6 +2139,10 @@ def main() -> int:
             audit_data=audit_data,
             run_config=config,
             config_source=config_source,
+            enable_score_calibration=config.get("enable_score_calibration", False),
+            validation_fraction=config.get("validation_fraction", 0.25),
+            target_false_positive_rate=config.get("target_false_positive_rate", 0.001),
+            feature_ablation=config.get("feature_ablation", "none"),
         )
     except Exception as exc:
         logger.error(f"Training pipeline halted: {exc}", exc_info=True)

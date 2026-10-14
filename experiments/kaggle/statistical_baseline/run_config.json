@@ -6,6 +6,10 @@
   "model": "all",
   "seed": 42,
   "max_samples_per_class": null,
+  "enable_score_calibration": false,
+  "validation_fraction": 0.25,
+  "target_false_positive_rate": 0.001,
+  "feature_ablation": "none",
   "dataset_slug": "dhoogla/cicdohbrw2020",
   "dataset_version": "3",
   "description": "Safe default after the committed Layer 1 and Layer 2 tabular benchmarks. Review and commit a task-specific configuration before any new Kaggle training run."

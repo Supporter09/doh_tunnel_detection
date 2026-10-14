@@ -330,7 +330,7 @@ if mode == "train":
 
 # Validate model
 model = cfg.get("model")
-valid_models = {"all", "random_forest", "decision_tree", "gaussian_nb", "linear_svm"}
+valid_models = {"all", "random_forest", "decision_tree", "gaussian_nb", "linear_svm", "hist_gradient_boosting"}
 if model is not None and model not in valid_models:
     print(f"Error: Invalid 'model' in run_config.json: {model!r}. Must be one of {sorted(valid_models)}.", file=sys.stderr)
     sys.exit(1)
@@ -345,6 +345,30 @@ if seed is not None and (not isinstance(seed, int) or isinstance(seed, bool)):
 max_samples = cfg.get("max_samples_per_class")
 if max_samples is not None and (not isinstance(max_samples, int) or isinstance(max_samples, bool) or max_samples <= 0):
     print(f"Error: Invalid 'max_samples_per_class' in run_config.json: {max_samples!r}. Must be positive integer or null.", file=sys.stderr)
+    sys.exit(1)
+
+# Validate enable_score_calibration
+enable_cal = cfg.get("enable_score_calibration")
+if enable_cal is not None and not isinstance(enable_cal, bool):
+    print(f"Error: Invalid 'enable_score_calibration' in run_config.json: {enable_cal!r}. Must be boolean.", file=sys.stderr)
+    sys.exit(1)
+
+# Validate validation_fraction
+val_frac = cfg.get("validation_fraction")
+if val_frac is not None and (not isinstance(val_frac, (int, float)) or isinstance(val_frac, bool) or not (0.0 < float(val_frac) < 1.0)):
+    print(f"Error: Invalid 'validation_fraction' in run_config.json: {val_frac!r}. Must be float in (0.0, 1.0).", file=sys.stderr)
+    sys.exit(1)
+
+# Validate target_false_positive_rate
+target_fpr = cfg.get("target_false_positive_rate")
+if target_fpr is not None and (not isinstance(target_fpr, (int, float)) or isinstance(target_fpr, bool) or not (0.0 < float(target_fpr) < 1.0)):
+    print(f"Error: Invalid 'target_false_positive_rate' in run_config.json: {target_fpr!r}. Must be float in (0.0, 1.0).", file=sys.stderr)
+    sys.exit(1)
+
+# Validate feature_ablation
+feature_ablation = cfg.get("feature_ablation")
+if feature_ablation is not None and feature_ablation not in ("none", "group"):
+    print(f"Error: Invalid 'feature_ablation' in run_config.json: {feature_ablation!r}. Must be 'none' or 'group'.", file=sys.stderr)
     sys.exit(1)
 
 # Serialize canonical JSON and escape safely for a Python string literal
