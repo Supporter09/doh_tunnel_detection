@@ -1,16 +1,16 @@
 {
-  "mode": "audit",
-  "data_file": null,
-  "task": null,
-  "label_column": null,
+  "mode": "train",
+  "data_file": "L1-DoH-NonDoH.parquet",
+  "task": "l1",
+  "label_column": "Label",
   "model": "all",
   "seed": 42,
   "max_samples_per_class": null,
-  "enable_score_calibration": false,
+  "enable_score_calibration": true,
   "validation_fraction": 0.25,
   "target_false_positive_rate": 0.001,
-  "feature_ablation": "none",
+  "feature_ablation": "group",
   "dataset_slug": "dhoogla/cicdohbrw2020",
   "dataset_version": "3",
-  "description": "Safe default after the committed Layer 1 and Layer 2 tabular benchmarks. Review and commit a task-specific configuration before any new Kaggle training run."
+  "description": "Phase 1 Layer 1 tabular experiment: benchmark five classifiers, apply validation-only Platt calibration with a 0.1% NonDoH-to-DoH target FPR, and run grouped Random Forest feature ablations."
 }
