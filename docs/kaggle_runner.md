@@ -442,6 +442,20 @@ git commit -m "docs(manifest): record verified Kaggle statistical baseline metri
   1. Đối với **Audit Runs**: Lần chạy vẫn được phép tiến hành bình thường; tính toàn vẹn và xuất xứ của kernel được bảo đảm thông qua mã băm snapshot `KAGGLE_SOURCE_SNAPSHOT_SHA256`.
   2. Đối với **Thực Nghiệm Huấn Luyện Chính Thức (Official Experiments)**: Kết quả tạo ra KHÔNG ĐƯỢC PHÉP quảng bá vào `data/manifests/` cho đến khi dự án được commit đầy đủ vào kho Git nhằm bảo đảm khả năng tái lập khoa học 100%.
 * **Khắc phục:** Thực hiện `git add doh_tunnel_detection/` và tạo commit Git trước khi chạy thực nghiệm huấn luyện chính thức.
+### 9.8. Upload PCAP ZIP lớn bị ngắt kết nối
+* **Triệu chứng:** Trình duyệt quay vòng không hiện tiến độ, hoặc upload ZIP PCAP bị ngắt do lỗi kết nối.
+* **Khắc phục:** Dùng CLI có thanh tiến độ thay vì tải qua trình duyệt:
+  ```bash
+  bash scripts/kaggle/upload_raw_pcap_dataset.sh
+  ```
+  Script mặc định dùng `/Volumes/KINGSTON/PCAPs.zip`, tạo Dataset **private**, và chỉ tạo symbolic link trong `$HOME/.local/state/doh-reproduction/kaggle-pcap-upload`; không sao chép archive 80 GB vào project hay Git.
+* **Khôi phục sau lỗi mạng:** Giữ nguyên archive, ổ đĩa nguồn, staging directory và `/tmp/.kaggle/uploads`, sau đó chạy lại đúng lệnh trên. Kaggle CLI lưu trạng thái resumable-upload theo đường dẫn tệp trong tối đa sáu ngày.
+* **Theo dõi server-side processing:** Khi CLI đã báo upload thành công, Kaggle vẫn có thể đang giải nén archive. Kiểm tra bằng:
+  ```bash
+  .venv-tools/bin/kaggle datasets status <owner/dataset-slug>
+  ```
+* **Giới hạn:** Kaggle giới hạn 200 GB cho mỗi dataset và tự giải nén archive. Kiểm tra local archive hiện tại cho thấy ZIP chứa 35 file với tổng uncompressed size `80,870,581,876` bytes, dưới giới hạn này.
+
 ---
 
 ## 10. Tóm Tắt Quy Trình Dành Cho Thành Viên Nhóm (Teammate Checklist)
