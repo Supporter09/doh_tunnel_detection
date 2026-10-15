@@ -449,6 +449,7 @@ git commit -m "docs(manifest): record verified Kaggle statistical baseline metri
   bash scripts/kaggle/upload_raw_pcap_dataset.sh
   ```
   Script mặc định dùng `/Volumes/KINGSTON/PCAPs.zip`, tạo Dataset **private**, và chỉ tạo symbolic link trong `$HOME/.local/state/doh-reproduction/kaggle-pcap-upload`; không sao chép archive 80 GB vào project hay Git.
+  Script chấp nhận cả access token OAuth hiện có tại `~/.kaggle/access_token` lẫn token API cũ tại `~/.kaggle/kaggle.json`; không cần tạo token mới nếu `kaggle datasets list --mine` đã hoạt động.
 * **Khôi phục sau lỗi mạng:** Giữ nguyên archive, ổ đĩa nguồn, staging directory và `/tmp/.kaggle/uploads`, sau đó chạy lại đúng lệnh trên. Kaggle CLI lưu trạng thái resumable-upload theo đường dẫn tệp trong tối đa sáu ngày.
 * **Theo dõi server-side processing:** Khi CLI đã báo upload thành công, Kaggle vẫn có thể đang giải nén archive. Kiểm tra bằng:
   ```bash

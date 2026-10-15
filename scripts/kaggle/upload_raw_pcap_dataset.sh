@@ -22,7 +22,8 @@ Optional environment variables:
   KAGGLE_PCAP_UPLOAD_ROOT=<persistent staging directory>
 
 Requirements:
-  - Kaggle token at ~/.kaggle/kaggle.json with mode 600.
+  - A working Kaggle CLI authentication: ~/.kaggle/access_token, ~/.kaggle/kaggle.json,
+    or the KAGGLE_USERNAME and KAGGLE_KEY environment variables.
   - The archive remains mounted and unchanged for the full upload.
   - Run from an interactive terminal. Do not use -q: Kaggle CLI progress stays visible.
 
@@ -47,24 +48,28 @@ if [[ ! -f "$PCAP_ZIP" ]]; then
     exit 1
 fi
 
-if [[ ! -f "$HOME/.kaggle/kaggle.json" ]]; then
-    echo "Kaggle API token is missing at ~/.kaggle/kaggle.json." >&2
-    echo "Create one at https://www.kaggle.com/settings, then move the downloaded kaggle.json there with mode 600." >&2
-    exit 1
-fi
-
-if [[ "$(stat -f '%Lp' "$HOME/.kaggle/kaggle.json")" != "600" ]]; then
-    echo "Refusing insecure Kaggle token permissions; run: chmod 600 ~/.kaggle/kaggle.json" >&2
-    exit 1
-fi
-
 if ! "$KAGGLE_CLI" datasets list --mine >/dev/null 2>&1; then
-    echo "Kaggle authentication failed. Check ~/.kaggle/kaggle.json without printing its contents." >&2
+    echo "Kaggle authentication failed. Use 'kaggle auth login' or configure a legacy kaggle.json token." >&2
     exit 1
 fi
 
-KAGGLE_USERNAME="$($PYTHON_BIN -c 'import json, pathlib; print(json.loads((pathlib.Path.home() / ".kaggle" / "kaggle.json").read_text())["username"])')"
-DATASET_ID="${KAGGLE_DATASET_ID:-$KAGGLE_USERNAME/cicdohbrw2020-raw-pcaps}"
+DATASET_ID="${KAGGLE_DATASET_ID:-}"
+if [[ -z "$DATASET_ID" ]]; then
+    KERNEL_CSV="$("$KAGGLE_CLI" kernels list --mine --csv)"
+    KAGGLE_USERNAME="$(printf '%s\n' "$KERNEL_CSV" | "$PYTHON_BIN" -c '
+import csv
+import sys
+
+for row in csv.DictReader(sys.stdin):
+    ref = row.get("ref", "")
+    if "/" in ref:
+        print(ref.split("/", 1)[0])
+        break
+else:
+    raise SystemExit("No owned Kaggle kernel found; set KAGGLE_DATASET_ID=<owner/dataset-slug>.")
+')"
+    DATASET_ID="$KAGGLE_USERNAME/cicdohbrw2020-raw-pcaps"
+fi
 
 if [[ ! "$DATASET_ID" =~ ^[a-z0-9][a-z0-9_-]*/[a-z0-9][a-z0-9_-]*$ ]]; then
     echo "Invalid KAGGLE_DATASET_ID: $DATASET_ID" >&2
