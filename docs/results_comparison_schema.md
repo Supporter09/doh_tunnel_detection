@@ -9,11 +9,11 @@
 
 ## 1. Executive Summary & Purpose
 
-This specification establishes the formal comparative evaluation schema connecting:
-1. **Immutable Paper-Reported Baselines**: Published empirical results from MontazeriShatoori et al. (*IEEE DASC/PiCom/CBDCom/CyberSciTech 2020*), specifically Tables III, IV, V, and VI.
-2. **Phase 1 Tabular Statistical Baselines**: Audited results from the 29-feature Kaggle mirror benchmark (`dhoogla/cicdohbrw2020` v3) under stratified random 80/20 flow-level splitting.
-3. **Phase 2 Time-Series Packet-Clump Evaluations**: Raw-PCAP sequential evaluations using 5-tuple clump sequences under both flow-random replication and session/scenario group-disjoint splits.
-
+This specification establishes the formal comparative evaluation schema connecting four distinct evidentiary levels:
+1. **Immutable Paper-Reported Baselines (Level 1)**: Published empirical results from MontazeriShatoori et al. (*IEEE DASC/PiCom/CBDCom/CyberSciTech 2020*), specifically Tables III, IV, V, and VI.
+2. **Phase 1 Tabular Statistical Baselines (Level 2)**: Audited results independently observed on the 29-feature Kaggle mirror benchmark (`dhoogla/cicdohbrw2020` v3) under stratified random 80/20 flow-level splitting.
+3. **Phase 2 Time-Series Packet-Clump Implemented Methodology (Level 3)**: Reconstructed and modernized sequential pipeline in `src/doh_reproduction/` (bug-fixed 1ms clumping, DoHLyzer normalization, 70/15/15 disjoint split, exact paper v4 architecture, and improved masked BiGRU with attention).
+4. **Phase 2 Time-Series Observed Benchmarks (Level 4)**: Currently **pending evaluation** while the private raw-PCAP dataset reuploads to Kaggle. Absent metrics MUST remain `[Unavailable]`, never fabricated.
 ### Core Architectural Principles
 - **Strict Evidentiary Provenance**: Every metric row is explicitly tagged with its evidentiary status (`[Paper-Reported]`, `[Project-Observed]`, `[Project-Calibrated]`, `[Project-Replication]`, `[Project-Corrected]`, `[Project-Improved]`, `[Unavailable]`).
 - **No Fabricated Data**: Missing future experimental results MUST render as `unavailable`, never as `0.0`, blank placeholders, or speculative extrapolations.
@@ -33,15 +33,14 @@ Every table row and presentation bullet must carry one of the following provenan
 | **`project_calibrated_statistical`** | `[Project-Calibrated]` | Tabular models tuned via validation-fit Platt scaling targeting False Positive Rate $\le 0.001$ ($0.1\%$). |
 | **`project_replication_flow_random`** | `[Project-Replication]` | Time-series packet-clump / LSTM evaluation executed under the paper's original 80/20 random flow split protocol. |
 | **`project_corrected_group_disjoint`** | `[Project-Corrected]` | Time-series evaluation executed under a 70/15/15 group-disjoint split partitioned strictly by capture session and attack scenario. |
-| **`project_improved`** | `[Project-Improved]` | Mask-aware Bidirectional GRU with learned attention pooling, class-weighted BCE, and validation Platt calibration. |
+| **`project_improved`** | `[Project-Improved]` | Mask-aware Bidirectional GRU with learned attention pooling, class-weighted BCE, and validation Platt calibration. Architecture implemented; empirical metrics pending Kaggle raw-PCAP execution. |
 | **`unavailable`** | `[Unavailable]` | Future or unexecuted experimental runs. Explicitly designated as `unavailable`; numeric metrics render as `"unavailable"`. |
 
 ---
 
 ## 3. Methodological Caveats for Academic Report & Slides
 
-To maintain rigorous scientific standards, any presentation or written chapter referencing these results **must explicitly communicate two foundational caveats**:
-
+To maintain rigorous scientific standards, any presentation or written chapter referencing these results **must explicitly communicate four foundational caveats**:
 ### Caveat 1: The Cross-Session Data Leakage Vulnerability
 
 ```text
@@ -82,6 +81,17 @@ To maintain rigorous scientific standards, any presentation or written chapter r
 
 - **Warning**: Never directly compare the F1-score of a statistical classifier (e.g. Random Forest with 28 features) against a time-series classifier without highlighting the detection horizon.
 - Achieving $F_1 = 0.993$ after observing **0.574 seconds** of traffic (packet clumping at $\ell=6$) is operationally superior to achieving $F_1 = 0.993$ after waiting **20.393 seconds** (full flow completion), because early detection enables inline TCP RST or firewall block enforcement before significant data exfiltration occurs.
+
+### Caveat 3: Omission of Training Hyperparameters in Paper
+
+1. **Missing Hyperparameters**: MontazeriShatoori et al. (2020) omitted essential neural training hyperparameters: optimizer, learning rate, mini-batch size, epoch budget, and early stopping criteria.
+2. **Reference Implementation vs. Paper Text**: Ground-truth layer topology is derived from the author's reference code (`v4.py` in DoHLyzer by Arash Habibi Lashkari et al.), but training hyperparameters (Adam optimizer, $\text{lr}=0.001$, batch size 64, patience 5) are project reproduction choices. They must **never** be claimed as paper specifications.
+
+### Caveat 4: Status of Time-Series Observed Results & Pending Execution
+
+1. **Evidence Status**: Verified Phase 1 statistical baselines exist in repository manifests (`data/manifests/kaggle_phase1_l*_evidence.json`). Conversely, Phase 2 raw-PCAP time-series runs are unexecuted pending Kaggle dataset upload.
+2. **No Fabricated Claims**: Any table or slide presenting sequential results must mark project time-series rows as `unavailable`.
+3. **Implementation vs. Demonstrated Benefit**: Architectural enhancements (Mask-Aware BiGRU, Attention Pooling, Class Weighting) are implemented capabilities; they must never be described as "demonstrated empirical benefits" until benchmarked on raw PCAP.
 
 ---
 
@@ -239,15 +249,15 @@ Provides the quantitative justification for packet-clump sequence classification
 
 Synthesizes the project's concrete engineering and scientific modernization contributions:
 
-| Pillar | Improvement Area | Paper Baseline / Defect | Project Modernization | Demonstrated Benefit |
-|---|---|---|---|---|
-| **1. Algorithm Bug Fix** | Clumping Termination Logic | Algorithm 1 logic inversion: terminated when direction equaled next packet | Terminate when direction $\ne$ next packet OR elapsed time $> 1\text{ ms}$ | Restores physical burst grouping; prevents single-packet fragment decay |
-| **1. Algorithm Bug Fix** | Clumping Array Bounds | Line 9 indexed `packets[counter]` after advancing past array length | Strict array boundary check (`counter >= len(packets)`) | Eliminates out-of-bounds runtime crashes |
-| **2. Scientific Protocol** | Session Leakage Guard | 80/20 flow-level random split mixed packets from identical sessions | Group-disjoint 70/15/15 split strictly by session and scenario IDs | Measures true adversarial generalization; eliminates optimistic leakage |
-| **3. Operational Safety** | Threshold Calibration | Arbitrary default 0.5 threshold; uncalibrated false alarm rate | Platt scaling fit strictly on validation split targeting $\text{FPR} \le 0.001$ | Constrains enterprise false alarms to $< 0.1\%$; avoids alert fatigue |
-| **4. Feature Understanding** | Feature Group Ablation | Claimed 28 features necessary without isolating sub-group impacts | Systematic group ablation proved `PacketLength` features dominate | `PacketLengthMode` top importance ($> 22\%$); reduces feature overhead |
-| **5. Deep Architecture** | Mask-Aware BiGRU | Vanilla unidirectional LSTM with zero/negative padding | Mask-aware Bidirectional GRU with learned attention pooling | Robust handling of variable burst counts; highlights informative clumps |
-| **6. Reproducibility** | Immutable Manifests | Stated vs omitted hyperparameters (omitted optimizer, lr, batch, seed) | JSON artifact schemas, SHA-256 dataset pinning, deterministic test gates | Complete reproducible pipeline from raw PCAP to published tables |
+| Pillar | Improvement Area | Paper Baseline / Defect | Project Modernization | Technical Capability / Benefit | Status |
+|---|---|---|---|---|:---:|
+| **1. Algorithm Bug Fix** | Clumping Termination Logic | Algorithm 1 logic inversion: terminated when direction equaled next packet | Terminate when direction $\ne$ next packet OR elapsed time $> 1\text{ ms}$ | Restores physical burst grouping; prevents single-packet fragment decay | **Verified** |
+| **1. Algorithm Bug Fix** | Clumping Array Bounds | Line 9 indexed `packets[counter]` after advancing past array length | Strict array boundary check (`counter >= len(packets)`) | Eliminates out-of-bounds runtime crashes | **Verified** |
+| **2. Scientific Protocol** | Session Leakage Guard | 80/20 flow-level random split mixed packets from identical sessions | Group-disjoint 70/15/15 split strictly by session and scenario IDs | Measures true adversarial generalization; eliminates optimistic leakage | **Verified** |
+| **3. Operational Safety** | Threshold Calibration | Arbitrary default 0.5 threshold; uncalibrated false alarm rate | Platt scaling fit strictly on validation split targeting $\text{FPR} \le 0.001$ | Constrains enterprise false alarms to $< 0.1\%$ on Phase 1 statistical flows (observed test FPR 0.00085 for L1, 0.00026 for L2); time-series sequential calibration implemented in training pipeline, empirical benefit pending raw-PCAP evaluation | **Verified (Phase 1 Stat) / Implemented (Time-Series)** |
+| **4. Feature Understanding** | Feature Group Ablation | Claimed 28 features necessary without isolating sub-group impacts | Systematic group ablation proved `PacketLength` features dominate | `PacketLengthMode` top importance ($> 22\%$); reduces feature overhead | **Verified** |
+| **5. Deep Architecture** | Mask-Aware BiGRU | Vanilla unidirectional LSTM with zero/negative padding | Mask-aware Bidirectional GRU with learned attention pooling, class-weighted BCE | Explicit masking ignores `[-1,-1,-1,-1,0]` padding; empirical metrics pending raw-PCAP execution | **Implemented (Pending Eval)** |
+| **6. Reproducibility** | Immutable Manifests | Stated vs omitted hyperparameters (omitted optimizer, lr, batch, seed) | JSON artifact schemas, SHA-256 dataset pinning, deterministic test gates | Complete reproducible pipeline from raw PCAP to published tables | **Verified** |
 
 ---
 
@@ -288,50 +298,98 @@ The `comparison.py` parser strictly validates incoming metric payloads. Payloads
 
 ### 5.2 Phase 2 Time-Series Metrics Schema (`metrics.json` / `experiment_evidence.json`)
 
+The canonical time-series runner (`experiments/kaggle/timeseries_clump_lstm/train_timeseries.py`) emits a top-level payload with `manifest_version`, `task: "both"`, `execution_mode`, `status`, provenance hashes, and a `runs` list containing individual evaluated configurations (or `runs: []` in audit mode):
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Phase2TimeSeriesMetricsPayload",
   "type": "object",
-  "required": ["manifest_version"],
+  "required": ["manifest_version", "task", "runs"],
   "properties": {
     "manifest_version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
-    "task": { "type": "string", "enum": ["l1", "l2", "layer1_doh_vs_nondoh", "layer2_benign_vs_malicious"] },
-    "split_protocol": { "type": "string", "enum": ["paper_flow_random", "session_scenario_disjoint", "paper_flow_random_80_20"] },
-    "model_architecture": { "type": "string" },
-    "window_size": { "type": "integer", "minimum": 1, "maximum": 10 },
-    "metrics": {
-      "type": "object",
-      "properties": {
-        "precision": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-        "recall": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-        "f1_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-        "fpr": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-        "roc_auc": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
-      }
-    },
-    "latencies_seconds": {
-      "type": "object",
-      "properties": {
-        "mean_duration": { "type": "number", "minimum": 0.0 },
-        "median_duration": { "type": "number", "minimum": 0.0 }
-      }
-    },
-    "window_sweep": {
+    "task": { "type": "string", "enum": ["both", "l1", "l2", "layer1_doh_vs_nondoh", "layer2_benign_vs_malicious"] },
+    "execution_mode": { "type": "string", "enum": ["train", "audit"] },
+    "status": { "type": "string", "enum": ["training_completed", "not_trained", "audit_only"] },
+    "git_sha": { "type": "string" },
+    "source_snapshot_sha256": { "type": "string" },
+    "runs": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["window_size"],
+        "required": ["task", "model", "window_size", "split_protocol"],
         "properties": {
+          "task": { "type": "string", "enum": ["l1", "l2"] },
+          "model": { "type": "string", "enum": ["paper_v4", "improved_bidi_gru"] },
           "window_size": { "type": "integer", "minimum": 1, "maximum": 10 },
-          "metrics": { "type": "object" },
-          "latencies_seconds": { "type": "object" }
+          "split_protocol": { "type": "string", "enum": ["paper_flow_random", "session_scenario_disjoint", "paper_flow_random_80_20"] },
+          "evidence_status": { "type": "string" },
+          "train_samples": { "type": "integer", "minimum": 0 },
+          "val_samples": { "type": "integer", "minimum": 0 },
+          "test_samples": { "type": "integer", "minimum": 0 },
+          "accuracy": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+          "precision": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+          "recall": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+          "f1_score": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+          "f1": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+          "fpr": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+          "roc_auc": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+          "pr_auc": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+          "tn": { "type": "integer", "minimum": 0 },
+          "fp": { "type": "integer", "minimum": 0 },
+          "fn": { "type": "integer", "minimum": 0 },
+          "tp": { "type": "integer", "minimum": 0 },
+          "threshold_used": { "type": "number" },
+          "is_calibrated": { "type": "boolean" },
+          "target_fpr": { "type": "number" },
+          "leakage_caveat": { "type": "string" }
         }
       }
     }
   }
 }
 ```
+
+#### Example Canonical Payload (`metrics.json`):
+```json
+{
+  "manifest_version": "1.0.0",
+  "task": "both",
+  "execution_mode": "train",
+  "status": "training_completed",
+  "git_sha": "ef32e2060cf0bbf4adad3f4f14ad2bcf1b98a001",
+  "source_snapshot_sha256": "4b9e28fa266f21d3f9e99a80396556fa1df285d038164be6562086395b451368",
+  "runs": [
+    {
+      "task": "l1",
+      "model": "paper_v4",
+      "window_size": 6,
+      "split_protocol": "session_scenario_disjoint",
+      "evidence_status": "project_corrected_group_disjoint",
+      "train_samples": 700,
+      "val_samples": 150,
+      "test_samples": 150,
+      "accuracy": 0.9933,
+      "precision": 0.9930,
+      "recall": 0.9930,
+      "f1_score": 0.9930,
+      "f1": 0.9930,
+      "fpr": 0.0009,
+      "roc_auc": 0.9992,
+      "pr_auc": 0.9988,
+      "tn": 75,
+      "fp": 1,
+      "fn": 0,
+      "tp": 74,
+      "threshold_used": 0.5218,
+      "is_calibrated": true,
+      "target_fpr": 0.001,
+      "leakage_caveat": "Group/session-disjoint split isolates entire sessions..."
+    }
+  ]
+}
+```
+*(Note: In audit mode, `execution_mode` is `"audit"`, `status` is `"not_trained"`, and `runs` is `[]`, guaranteeing zero fabricated numbers).*
 
 ---
 

@@ -86,6 +86,29 @@ cd doh_tunnel_detection
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
+### 3.3. Tạo Báo Cáo So Sánh Đối Chiếu & Bảng Số Liệu (Comparison Report CLI)
+Sinh báo cáo Markdown tổng hợp và 6 bảng số liệu CSV xác định từ các bằng chứng thực nghiệm đã được thẩm định:
+
+```bash
+cd doh_tunnel_detection
+python3 scripts/generate_report.py \
+  --phase1-l1 data/manifests/kaggle_phase1_l1_evidence.json \
+  --phase1-l2 data/manifests/kaggle_phase1_l2_evidence.json \
+  --output-dir reports/comparison/
+```
+
+Khi có kết quả time-series Phase 2 (từ `train_timeseries.py`), bổ sung cờ `--phase2-metrics`:
+```bash
+python3 scripts/generate_report.py \
+  --phase1-l1 data/manifests/kaggle_phase1_l1_evidence.json \
+  --phase1-l2 data/manifests/kaggle_phase1_l2_evidence.json \
+  --phase2-metrics artifacts/kaggle/metrics.json \
+  --output-dir reports/comparison/ \
+  --force
+```
+
+Chi tiết đầy đủ về tham số và định dạng đầu ra xem tại [docs/report_generation_cli.md](docs/report_generation_cli.md).
+
 ---
 
 ## 4. Cấu Trúc Đầu Ra JSON Dự Kiến (Expected JSON Output Schema)

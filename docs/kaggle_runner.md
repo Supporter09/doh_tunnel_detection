@@ -36,6 +36,16 @@ Tài liệu này hướng dẫn chi tiết quy trình thiết lập môi trườ
   * Phân tích chuyên sâu bài báo gốc & tham số khuyết thiếu: [docs/paper_analysis.md](paper_analysis.md)
   * Kế hoạch cộng tác nhóm & quy chuẩn bàn giao: [docs/team_plan.md](team_plan.md)
 
+
+### 1.3. Bốn Cấp Độ Bằng Chứng Khoa Học & Phạm Vi Runner Chuỗi Thời Gian (Four-Level Evidentiary Hierarchy & Time-Series Scope)
+Dự án thiết lập ranh giới phân định minh bạch qua bốn cấp độ bằng chứng thực nghiệm:
+1. **Cấp 1 — Baseline Bài Báo Công Bố (Paper-Reported Baselines)**: Các số liệu bất biến được công bố trong MontazeriShatoori et al. (2020) (Bảng III, IV, V, VI).
+2. **Cấp 2 — Baseline Thống Kê Quan Sát Được (Project-Observed Statistical)**: Số liệu độc lập trên 29 đặc trưng bảng từ Kaggle mirror (`dhoogla/cicdohbrw2020` v3), có tệp kê khai nguồn và commit Git sạch (`kaggle_phase1_l*_evidence.json`).
+3. **Cấp 3 — Phương Pháp Luận & Mã Nguồn Chuỗi Thời Gian Đã Cài Đặt (Project-Implemented Time-Series)**: Toàn bộ pipeline tái lập và hiện đại hóa trong `src/doh_reproduction/` và `experiments/kaggle/timeseries_clump_lstm/` (đọc PCAP trực tiếp từ ZIP lồng nhau, gom cụm 1ms đã sửa lỗi, chuẩn hóa DoHLyzer, chia rời rạc 70/15/15, kiến trúc v4 paper và mô hình BiGRU cải tiến). Được bao phủ bởi hệ thống kiểm thử hành vi toàn diện (behavioral test suite) kiểm chứng cấu trúc dữ liệu, thuật toán gom cụm, bảo vệ chống zip-bomb và tính tương thích của mô hình.
+4. **Cấp 4 — Kết Quả Thực Nghiệm Chuỗi Thời Gian Quan Sát Được (Project-Observed Time-Series)**: Hiện đang ở trạng thái **CHỜ THỰC THI (PENDING)** trong khi tập dữ liệu PCAP thô riêng tư được tải lại lên Kaggle. Mọi bảng kết quả hoặc slide trình chiếu **bắt buộc ghi nhận là `[Unavailable]`**, tuyệt đối không điền số giả lập `0.0` hay suy đoán kết quả.
+
+* **Công bố về tham số huấn luyện khuyết thiếu trong bài báo**: Nhóm tác giả 2020 đã bỏ sót toàn bộ tham số tối ưu hóa (optimizer, learning rate, batch size, epoch budget, early stopping). Các tham số (Adam, lr=1e-3, batch=64, patience=5) là quyết định kỹ thuật của dự án nhằm phục vụ tái hiện, tuyệt đối không được mạo nhận là quy chuẩn của bài báo.
+* **Không mạo nhận lợi ích khi chưa thực thi**: Mô hình BiGRU cải tiến nhận biết mặt nạ đệm và hàm mất mát có trọng số là đóng góp kiến trúc đã được cài đặt; hiệu năng thực tế phải chờ thực nghiệm chính thức trên Kaggle và không được tuyên bố là "lợi ích đã chứng minh" trước khi có kết quả quan sát.
 ---
 
 ## 2. Thiết Lập Kaggle CLI An Toàn (Secure Kaggle CLI Setup)
@@ -140,21 +150,26 @@ Kaggle API 1.x.x
 ## 4. Cấu Hình Biến Môi Trường Shell (`KAGGLE_KERNEL_ID`)
 
 ### 4.1. Quy Ước Định Danh Kernel
-Mỗi thành viên sở hữu một kernel Kaggle độc lập dưới tài khoản của mình. Định danh kernel bắt buộc tuân theo định dạng:
+Mỗi thành viên sở hữu kernel Kaggle độc lập cho từng nhánh nghiên cứu dưới tài khoản của mình. Định danh kernel bắt buộc tuân theo định dạng:
 ```text
 <kaggle_username>/<kernel_slug>
 ```
-* Ví dụ: `alice_sec/cicdohbrw2020-statistical-baseline` hoặc `charlie/doh-statistical-baseline`.
+* Cho Runner Thống Kê Dạng Bảng: `<kaggle_username>/cicdohbrw2020-statistical-baseline`
+* Cho Runner Chuỗi Thời Gian Packet-Clump: `<kaggle_username>/cicdohbrw2020-timeseries-lstm`
 * Wrapper sẽ kiểm tra nghiêm ngặt định dạng này và tự động từ chối nếu tên chứa các chuỗi placeholder như `INSERT_KAGGLE_USERNAME`, `your_username`, hoặc để trống.
 
 ### 4.2. Thiết Lập Biến Trong Phiên Shell (Khuyến Nghị)
-Thiết lập trực tiếp trong terminal đang làm việc. Biến này chỉ tồn tại trong bộ nhớ phiên và tự hủy khi đóng cửa sổ:
+Thiết lập trực tiếp trong terminal đang làm việc tùy theo nhánh thực nghiệm:
 
 ```bash
+# Nhánh 1: Baseline thống kê dạng bảng
 export KAGGLE_KERNEL_ID="<your-kaggle-username>/cicdohbrw2020-statistical-baseline"
+
+# Nhánh 2: Time-series packet-clump LSTM / BiGRU
+export KAGGLE_TIMESERIES_KERNEL_ID="<your-kaggle-username>/cicdohbrw2020-timeseries-lstm"
 ```
 
-### 4.3. Sử Dụng Tệp Mẫu `scripts/kaggle/.env.example`
+### 4.3. Sử Dụng Tệp Cấu Hình Môi Trường Cục Bộ (`scripts/kaggle/.env`)
 Dự án cung cấp tệp cấu hình mẫu `scripts/kaggle/.env.example`:
 ```bash
 # Xem nội dung mẫu
@@ -338,26 +353,152 @@ bash scripts/kaggle/pull_outputs.sh --force
 
 ---
 
-## 8. Danh Mục Tạo Tác & Chính Sách Đưa Vào Git (Artifact Promotion Policy)
+## 8. Vận Hành Runner Chuỗi Thời Gian Packet-Clump (Phase 2 Raw-PCAP Time-Series Runner)
 
-### 8.1. Các Tạo Tác Sinh Ra Tại `artifacts/kaggle/<kernel-slug>/`
-Mỗi phiên chạy thành công sẽ kết xuất bộ 4 thành phần tạo tác chuẩn:
+Nhánh thực nghiệm Phase 2 tái hiện trực tiếp mô hình chuỗi thời gian nơ-ron hồi quy (Packet Clumping + LSTM/BiGRU) từ dữ liệu bắt gói mạng thô (Raw PCAP) theo phương pháp luận của MontazeriShatoori et al. (2020) và mã nguồn tham chiếu DoHLyzer.
 
-1. **`schema_audit.json`:** Báo cáo kiểm toán toàn bộ các tệp dữ liệu đầu vào, kích thước byte, băm SHA-256, số hàng, số thuộc tính và kiểu dữ liệu.
-2. **`metrics.json`:** Báo cáo đo lường chi tiết của các mô hình đã đánh giá trên tập kiểm thử (Test Set), bao gồm Accuracy, Macro/Weighted và Positive-class Precision/Recall/F1, FPR, ROC-AUC, PR-AUC, confusion matrix, thời gian fit và độ trễ suy luận. Với Layer 2 mất cân bằng, dùng Macro-F1, F1 của từng lớp và PR-AUC để đánh giá chính; không suy luận chất lượng chỉ từ accuracy.
-3. **`experiment_manifest.json`:** Tệp kê khai xuất xứ khoa học đầy đủ (Provenance Manifest v1.0.0), bao gồm:
-   * Mã băm Git commit thực thi (`git_sha` trích xuất từ `KAGGLE_GIT_SHA`, mang giá trị `unknown_uncommitted_source` khi mã nguồn chưa commit trong Git).
-   * Mã băm bối cảnh nội dung kernel (`source_snapshot_sha256` trích xuất từ `KAGGLE_SOURCE_SNAPSHOT_SHA256`), bảo đảm bằng chứng mã nguồn bất biến ngay cả khi chưa commit.
-   * Định danh và phiên bản tập dữ liệu (`dhoogla/cicdohbrw2020` v3).
-   * Giá trị seed ngẫu nhiên (`random_seed: 42`).
-   * Danh mục các tệp đầu vào kèm mã băm SHA-256 xác thực.
-   * Danh sách các cột thuộc tính đã sử dụng (đã loại bỏ triệt để các thuộc tính định danh IP/Port/Timestamp nhằm chống rò rỉ định danh luồng).
-   * Tuyên bố phạm vi nghiên cứu (`non_claim_scope`): khẳng định đây là baseline thống kê, không phải tái hiện LSTM.
-   * Phiên bản các thư viện thực thi (`python`, `scikit-learn`, `pandas`, `numpy`, `scipy`).
+### 8.1. Kiến Trúc Tệp Nén Lồng Nhau & Cơ Chế Đọc Luồng (Streaming Ingestion & Cumulative Budget)
+* **Cấu trúc lưu trữ raw archive**: Tập dữ liệu thô `PCAPs.zip` (35 tệp, tổng dung lượng giải nén `80,870,581,876` bytes ~ 80 GB) chứa cả các tệp PCAP độc lập và các tệp nén ZIP lồng nhau (nested ZIP archives) tương ứng với từng phiên thu thập và kịch bản tấn công.
+* **Cơ chế đọc luồng (Streaming Decompression mà không giải nén ra đĩa)**:
+  Môi trường Kaggle bị giới hạn đĩa làm việc (`/kaggle/working` tối đa 20 GB). Do đó, module `src/doh_reproduction/raw_dataset.py` duyệt cấu trúc tệp ZIP ảo trên bộ nhớ và sử dụng `open_stream()` để mở luồng giải nén trực tiếp từng thành viên PCAP (hoặc giải nén tạm thời một thành viên lồng nhau có giới hạn kích thước). Tuyệt đối **không giải nén toàn bộ 80 GB ra ổ cứng**, chống tràn đĩa 100%.
+* **Ngăn chặn Zip Bomb & Quản lý ngân sách giải nén (`_CumulativeBudgetTracker`)**:
+  * `max_standalone_capture_bytes`: 20 GB (kích thước tối đa cho tệp PCAP đơn lẻ).
+  * `max_member_bytes`: 10 GB (kích thước tối đa cho một thành viên PCAP trong archive).
+  * `max_nested_archive_bytes`: 25 GB (kích thước tối đa cho tệp ZIP lồng nhau).
+  * `max_total_uncompressed_bytes`: 200 GB (ngân sách giải nén tích lũy toàn phiên).
+  * `max_compression_ratio`: 100.0 (tỷ lệ nén tối đa cho phép; giới hạn rủi ro giải nén tệp độc hại theo cơ chế fail-closed: lập tức từ chối và ngắt tiến trình đối với các archive vượt ngưỡng tỷ lệ nén hoặc khai báo kích thước không hợp lệ trước khi giải nén).
 
-### 8.2. Quy Tắc Đưa Tạo Tác Vào Git (Git Promotion Rules)
+### 8.2. Tiêu Chuẩn Trích Xuất Gói Tin & Lắp Ghép Luồng (Packet Decoding & Flow Assembly)
+* **Lazy dpkt Loader**: Thư viện `dpkt` được nạp trễ an toàn trong `src/doh_reproduction/pcap.py`, xử lý cả định dạng PCAP chuẩn lẫn PCAPNG.
+* **Bộ lọc dữ liệu ứng dụng TLS (TLS Application Data Filter)**:
+  * Chỉ chấp nhận các bản ghi TLS có **Content Type = 23** (`TLS_RECORD_APPLICATION_DATA` theo RFC 5246 / RFC 8446).
+  * **Ngưỡng tải trọng tối thiểu**: `DEFAULT_MIN_TLS_APP_BYTES = 40` bytes. Quy chuẩn này (theo DoHLyzer) loại bỏ triệt để các khung điều khiển nhỏ như HTTP/2 PING frame (độ dài 34 bytes), TLS handshakes, các gói tin ACK rỗng hoặc các thông điệp giữ kết nối (keepalive) không mang dữ liệu DNS.
+* **Hết hạn luồng (Flow Expiry)**: `DEFAULT_FLOW_TIMEOUT_SECONDS = 40.0` giây (chuẩn `EXPIRED_UPDATE = 40` trong DoHLyzer). Các gói tin cùng 5-tuple nhưng cách nhau $> 40\text{ s}$ được tách thành các luồng độc lập.
+* **Xác định chiều luồng (Direction Assignment)**:
+  Gói tin TLS Application Data hợp lệ đầu tiên xuất hiện trong luồng sẽ định danh `client_ip:client_port` là bên khởi tạo (chiều đi - forward, giá trị `0`). Chiều ngược lại từ máy chủ `server_ip:server_port` về máy khách là chiều về (backward, giá trị `1`).
 
-Nhóm áp dụng ranh giới phân định nghiêm ngặt giữa tài liệu học thuật và dữ liệu nhị phân:
+### 8.3. Thuật Toán Gom Cụm 1ms & Sửa 2 Lỗi Thuật Toán 1 Bài Báo Gốc
+* **Định nghĩa Cụm (Packet Clump)**:
+  Mỗi cụm là một 5-tuple $(size, pkt\_count, direction, duration, interarrival)$ gom các gói tin truyền liên tiếp cùng chiều có khoảng cách thời gian $dt \le \tau = 0.001\text{ s}$ (1 millisecond).
+* **Sửa 2 lỗi in ấn nghiêm trọng trong Thuật toán 1 của bài báo**:
+  1. **Lỗi đảo ngược logic ngắt vòng lặp (Termination Logic Inversion)**:
+     Trong bài báo gốc (Hình 4 / Thuật toán 1, dòng 6), điều kiện ngắt vòng lặp được in là `packets[counter].direction == nextPacket.direction`. Điều này dẫn đến việc vòng lặp bị ngắt ngay lập tức khi gặp gói tin *cùng chiều*, làm toàn bộ luồng bị vỡ vụn thành các cụm đơn lẻ (1 gói tin/cụm). Dự án sửa lại chính xác theo mã nguồn DoHLyzer: chỉ ngắt cụm khi `packets[counter].direction != nextPacket.direction` HOẶC `timePassed > 0.001\text{ s}`.
+  2. **Lỗi tràn biên mảng (Array Bounds Check Crash)**:
+     Dòng 9 trong Thuật toán 1 của bài báo truy cập `packets[counter]` ngay sau khi tăng biến đếm `counter = counter + 1` mà không kiểm tra độ dài mảng, gây lỗi IndexError/Segmentation Fault khi đọc đến gói tin cuối cùng. Dự án bổ sung kiểm tra chặn `if counter >= len(packets): break` trước khi truy cập.
+
+### 8.4. Chuẩn Hóa DoHLyzer, Vector Đệm & Thứ Tự Đặc Trưng
+Mô hình chuỗi thời gian tuân thủ nghiêm ngặt chuẩn dữ liệu DoHLyzer (`src/doh_reproduction/timeseries_data.py`):
+* **Thứ tự đặc trưng chuẩn (`PAPER_REFERENCE_FEATURE_ORDER`)**:
+  ```python
+  ["interarrival", "duration", "size", "packet_count", "direction"]
+  ```
+* **Vector đệm chuẩn (`PADDING_VECTOR`)**:
+  `[-1.0, -1.0, -1.0, -1.0, 0.0]` (được áp dụng khi chuỗi cụm ngắn hơn độ dài cửa sổ $\ell$).
+* **Phương trình chuẩn hóa phi tuyến (DoHLyzer Normalization Equations)**:
+  * **Thời gian (Interarrival & Duration)**:
+    $$\text{norm}(x) = \frac{\log_{10}(\max(10^{-12}, x)) - (-12)}{-2 - (-12)}$$
+  * **Kích thước cụm (Size in bytes)**:
+    $$\text{norm}(s) = \frac{\log_{10}(\min(10^4, \max(10^{-12}, s))) - 0.5}{4.0 - 0.5}$$
+  * **Số lượng gói tin (Packet Count)**:
+    $$\text{norm}(c) = \frac{\log_2(\min(256, \max(1, c))) - 0}{8.0 - 0.0}$$
+  * **Chiều truyền tải (Direction)**:
+    Client $\to$ Server (Forward, 0) $\to +1.0$; Server $\to$ Client (Backward, 1) $\to -1.0$.
+
+### 8.5. Cửa Sổ Trượt $\ell \in [1, 10]$ & Đánh Giá Nhận Diện Sớm
+* Đường ống sinh ra các cửa sổ trượt độ dài $\ell \in [1, 10]$ với bước nhảy stride = 1.
+* **Tầng 1 (DoH vs Non-DoH)**: Bảng V của bài báo chỉ ra điểm tối ưu tại $\ell = 6$ ($F_1 = 0.993$, độ trễ trung bình chỉ $0.574\text{ s}$, giảm $97.2\%$ thời gian so với chờ hết luồng $20.393\text{ s}$).
+* **Tầng 2 (Benign DoH vs Malicious DoH)**: Bảng VI của bài báo chỉ ra điểm tối ưu tại $\ell = 3$ ($F_1 = 0.991$, độ trễ trung bình $0.502\text{ s}$, giảm $99.1\%$ thời gian so với chờ hết luồng $53.924\text{ s}$).
+
+### 8.6. Kiến Trúc Mạng Nơ-ron v4 Bài Báo & Công Bố Tham Số Khuyết Thiếu
+* **Tái tạo kiến trúc v4 (`PaperReferenceLSTMModel`)**:
+  Được khôi phục nguyên bản từ mã nguồn `v4.py` của DoHLyzer:
+  1. `Dense(5 -> 10, ReLU)` chiếu từng bước cụm gói tin.
+  2. `LSTM(input_size=10, hidden_size=8*l, batch_first=True)` trích xuất đặc trưng chuỗi.
+  3. `Dense(8*l -> 6*l, ReLU)` nén đặc trưng.
+  4. `Dropout(p=0.2)` chống quá khớp.
+  5. `Dense(6*l -> 2*l, ReLU)` lớp ẩn phân loại.
+  6. `Dense(2*l -> 1, Sigmoid)` xuất xác suất nhị phân.
+* **Công bố minh bạch về tham số khuyết thiếu (Hyperparameter Omission Disclaimer)**:
+  Bài báo của MontazeriShatoori et al. (2020) **hoàn toàn không công bố**: thuật toán tối ưu (optimizer), tốc độ học (learning rate), kích thước batch, số epoch, hay điều kiện dừng sớm.
+  Trong dự án này, các tham số: **Adam, learning rate = 0.001, batch size = 64, epochs = 15, patience = 5** là **quyết định kỹ thuật tái hiện của dự án**, tuyệt đối **KHÔNG ĐƯỢC MẠO NHẬN** là thông số của bài báo gốc.
+
+### 8.7. Giao Thức Phân Chia: Rò Rỉ 80/20 vs Phân Chia Rời Rạc 70/15/15
+* **Cảnh báo rò rỉ 80/20 ngẫu nhiên (Paper Split Flaw)**:
+  Phân chia ngẫu nhiên ở cấp độ luồng (flow-level) làm phân tán các luồng từ cùng một phiên duyệt web hoặc cùng một đợt chạy C2 sang cả tập train và test. Các luồng này có chung dấu vết TLS Client Hello, danh sách cipher suite, và TCP window scale. Mô hình có xu hướng ghi nhớ các đặc trưng phiên thay vì học hành vi tunneling DoH thực tế.
+* **Giao thức hiệu chỉnh phân chia rời rạc 70/15/15 (Corrected Group-Disjoint Protocol)**:
+  Phân chia tập dữ liệu thành Train (70%), Validation (15%), Test (15%) nhóm triệt để theo `session_id` và `scenario_id`. Toàn bộ các luồng từ một phiên capture chỉ xuất hiện duy nhất ở một phân vùng, bảo đảm 0% rò rỉ phiên và đo lường chính xác năng lực tổng quát hóa đối với các phiên mạng chưa từng thấy.
+
+### 8.8. Mô Hình Cải Tiến: Mask-Aware BiGRU với Attention Pooling & Hiệu Chuẩn
+* **Kiến trúc `ImprovedMaskedBiGRUModel`**:
+  * **GRU hai chiều (Bidirectional GRU, hidden_dim=64)**: nắm bắt ngữ cảnh truyền gói tin theo cả chiều xuôi và ngược.
+  * **Attention Pooling nhận biết mặt nạ đệm (Mask-Aware Attention Pooling)**: tự động phát hiện các vector đệm `[-1.0, -1.0, -1.0, -1.0, 0.0]` và gán điểm attention trước softmax thành $-\infty$. Cơ chế này ngăn chặn hiện tượng làm méo đạo hàm từ các bước đệm nhân tạo.
+  * **Hàm mất mát BCE có trọng số (Class-Weighted BCE)**: `pos_weight` được tính toán trực tiếp từ tỷ lệ phân bố lớp của tập Train nhằm xử lý mất cân bằng dữ liệu nghiêm trọng ở Tầng 2.
+  * **Hiệu chuẩn điểm Platt Scaling trên Validation**: Khớp mô hình hồi quy logistic trên logits của tập Validation nhằm chọn ngưỡng vận hành tối ưu khống chế $\text{FPR} \le 0.001$ ($0.1\%$).
+* **Ranh giới tuyên bố khoa học (Strict Non-Claim)**:
+  Toàn bộ mô hình cải tiến đã được cài đặt hoàn chỉnh và kiểm thử thành công trong mã nguồn (`timeseries_models.py`), nhưng **kết quả thực nghiệm trên tập PCAP thô hiện đang chờ thực thi trên Kaggle**. Do đó, trong mọi bảng kết quả và tài liệu báo cáo, chỉ được phép trình bày đây là *đóng góp về mặt thiết kế kiến trúc*, tuyệt đối không mạo nhận là "đã chứng minh được hiệu năng vượt trội trên thực tế" cho đến khi có số liệu quan sát từ Kaggle.
+
+### 8.9. Hạn Ngạch Bắt Buộc & Giới Hạn Tài Nguyên (Finite Caps in `run_config.json`)
+Để đảm bảo kernel không bị Kaggle ngắt tiến trình do vượt quá giới hạn CPU thời gian chạy (9 giờ) hoặc dung lượng RAM (30 GB), tệp `experiments/kaggle/timeseries_clump_lstm/run_config.json` thiết lập các hạn ngạch an toàn:
+
+| Tham số hạn ngạch | Giá trị mặc định | Mục đích bảo vệ tài nguyên |
+| :--- | :---: | :--- |
+| `max_capture_members` | `100` | Giới hạn số lượng tệp/thành viên capture được đọc trong phiên. |
+| `max_flows_per_class` | `500` | Số lượng luồng tối đa thu thập cho mỗi lớp (được áp dụng theo nhãn luồng thực tế). |
+| `max_raw_packets` | `1,000,000` | Giới hạn tối đa 1 triệu gói tin thô được quét mỗi capture. |
+| `max_raw_bytes` | `1,073,741,824` | Giới hạn tối đa 1 GB dữ liệu gói tin thô mỗi capture. |
+| `max_capture_packets` | `200,000` | Giới hạn 200 nghìn gói tin TLS Application Data được chấp nhận mỗi capture. |
+| `max_capture_bytes` | `536,870,912` | Giới hạn 512 MB dữ liệu TLS Application Data mỗi capture. |
+| `max_flow_packets` | `10,000` | Giới hạn 10 nghìn gói tin TLS mỗi luồng đơn lẻ. |
+| `max_flow_bytes` | `52,428,800` | Giới hạn 50 MB dữ liệu TLS mỗi luồng đơn lẻ. |
+| `max_windows_per_flow` | `1,000` | Giới hạn tối đa 1 nghìn mẫu cửa sổ cụm được sinh ra từ một luồng. |
+| `max_windows_per_class` | `10,000` | Giới hạn tối đa 10 nghìn mẫu cửa sổ cụm cho mỗi lớp huấn luyện. |
+| `target_false_positive_rate` | `0.001` | Ngưỡng FPR tối đa mục tiêu ($0.1\%$) khi chọn ngưỡng vận hành Platt scaling. |
+
+### 8.10. Quy Trình 2 Giai Đoạn: Audit-First rồi mới Huấn Luyện
+Tương tự như nhánh thống kê, nhánh chuỗi thời gian tuân thủ nghiêm ngặt quy trình:
+1. **Giai đoạn 1: Audit Mode (`mode: "audit"`)**:
+   * Quét toàn bộ cây thư mục `/kaggle/input/cicdohbrw2020-raw-pcaps`, kiểm toán kích thước, băm SHA-256, phân tích scenario và session.
+   * Xuất tệp `pcap_audit.json` và kết thúc với exit code 0 mà không huấn luyện mô hình.
+   * Người dùng tải `pcap_audit.json` về máy trạm để kiểm tra tính toàn vẹn và xác thực phân bổ phiên.
+2. **Giai đoạn 2: Training Mode (`mode: "train"`)**:
+   * Chỉ sau khi `pcap_audit.json` được phê duyệt, người dùng cập nhật `run_config.json` sang `mode: "train"`, commit vào Git để có Git SHA sạch, và đẩy chạy huấn luyện chính thức.
+
+### 8.11. Các Lệnh CLI Wrapper Cho Time-Series
+
+```bash
+# 1. Tải lên tập dữ liệu PCAP thô (resumable upload tới private dataset trên Kaggle)
+bash scripts/kaggle/upload_raw_pcap_dataset.sh
+
+# 2. Đóng gói và đẩy kernel chuỗi thời gian lên Kaggle (hỗ trợ kiểm thử đóng gói với --dry-run)
+bash scripts/kaggle/push_timeseries_lstm.sh
+
+# 3. Theo dõi trạng thái thực thi của kernel
+bash scripts/kaggle/status_timeseries_lstm.sh
+
+# 4. Tải các tạo tác kết quả về cục bộ (chỉ thực hiện sau khi status báo complete)
+bash scripts/kaggle/pull_timeseries_outputs.sh --force
+```
+
+---
+
+## 9. Danh Mục Tạo Tác & Chính Sách Đưa Vào Git (Artifact Promotion Policy)
+
+### 9.1. Các Tạo Tác Sinh Ra
+Mỗi phiên chạy thành công sẽ kết xuất bộ tạo tác chuẩn tương ứng với nhánh thực nghiệm:
+
+* **Nhánh Thống Kê Dạng Bảng (`artifacts/kaggle/cicdohbrw2020-statistical-baseline/`)**:
+  1. `schema_audit.json`: Kiểm toán tệp bảng Parquet/CSV, số hàng, cột, kiểu dữ liệu và số lượng nhãn.
+  2. `metrics.json`: Báo cáo đo lường chi tiết của các mô hình cổ điển (Accuracy, Macro-F1, FPR, ROC-AUC, PR-AUC).
+  3. `experiment_manifest.json`: Kê khai xuất xứ khoa học (Git SHA, Snapshot SHA-256, Seed 42, Metadata).
+  4. `confusion_matrix_*.csv`: Ma trận nhầm lẫn chi tiết của từng mô hình.
+* **Nhánh Chuỗi Thời Gian Packet-Clump (`artifacts/kaggle/cicdohbrw2020-timeseries-lstm/`)**:
+  1. `pcap_audit.json`: Kiểm toán toàn diện kho PCAP, tệp ZIP lồng nhau, kịch bản, phiên, và băm SHA-256.
+  2. `metrics.json`: Báo cáo đo lường của mô hình Paper v4 và Improved BiGRU theo từng cửa sổ $\ell \in [1, 10]$ và giao thức phân chia (`paper_flow_random` vs `session_scenario_disjoint`).
+  3. `experiment_manifest.json`: Kê khai xuất xứ khoa học, phiên bản mã nguồn, seed, và các hạn ngạch đã áp dụng.
+  4. `training_history.csv`: Lịch sử hàm mất mát (loss) và độ đo qua từng epoch huấn luyện.
+  5. `confusion_matrix_*.csv`: Ma trận nhầm lẫn theo từng cửa sổ trượt.
+
+### 9.2. Quy Tắc Đưa Tạo Tác Vào Git (Git Promotion Rules)
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -367,110 +508,84 @@ Nhóm áp dụng ranh giới phân định nghiêm ngặt giữa tài liệu h�
 │   (PROMOTED ARTIFACTS)            │    (PROHIBITED ARTIFACTS)          │
 ├───────────────────────────────────┼────────────────────────────────────┤
 │ ✔ schema_audit.json               │ ✘ Tệp bảng dữ liệu thô (*.parquet, *.csv)│
-│ ✔ metrics.json                    │ ✘ Tệp bắt gói mạng PCAP (*.pcap)   │
-│ ✔ experiment_manifest.json        │ ✘ Checkpoint mô hình (*.pkl, *.pt) │
-│ ✔ confusion_matrix_*.csv          │ ✘ Tệp chứa khoá API (kaggle.json)  │
-│ (Lưu tại data/manifests/ hoặc docs)│ ✘ Tệp biến môi trường cục bộ (.env)│
+│ ✔ pcap_audit.json                 │ ✘ Tệp bắt gói mạng PCAP (*.pcap, *.pcapng)│
+│ ✔ metrics.json                    │ ✘ Archive nén dữ liệu (*.zip, *.tar.gz) │
+│ ✔ experiment_manifest.json        │ ✘ Trọng số mô hình (*.pkl, *.pt, *.pth)│
+│ ✔ training_history.csv            │ ✘ Tệp chứa khoá API (kaggle.json)  │
+│ ✔ confusion_matrix_*.csv          │ ✘ Tệp biến môi trường cục bộ (.env)│
+│ (Lưu tại data/manifests/ hoặc docs)│                                    │
 └───────────────────────────────────┴────────────────────────────────────┘
 ```
 
-**Điều kiện tiên quyết trước khi quảng bá (Promotion Prerequisite):**
-* **BẮT BUỘC COMMIT VÀO GIT:** Tuyệt đối không quảng bá bất kỳ kết quả thực nghiệm nào thành thực nghiệm chính thức (official reproducible experiment) nếu `git_sha` trong manifest vẫn mang giá trị `unknown_uncommitted_source`. Toàn bộ dự án `doh_tunnel_detection/` bắt buộc phải được commit sạch vào kho lưu trữ Git trước khi chạy thực nghiệm huấn luyện chính thức để mã Git commit SHA và Snapshot SHA256 liên kết chặt chẽ và có thể kiểm chứng độc lập.
-* **Quy trình cho Audit Runs:** Các lần chạy kiểm toán schema (audit-only runs) được phép tiến hành với mã băm snapshot `KAGGLE_SOURCE_SNAPSHOT_SHA256` khi mã nguồn chưa commit nhằm phục vụ thăm dò cấu trúc dữ liệu ban đầu.
-
-**Cách thức quảng bá (promote) kết quả vào Git:**
-Khi một thí nghiệm huấn luyện hoàn tất từ mã nguồn đã commit sạch trong Git và đạt tiêu chuẩn kiểm định, thành viên sao chép tệp manifest và metrics vào thư mục theo dõi phiên bản:
-```bash
-# Ví dụ lưu vết manifest chính thức cho lần chạy baseline L1 (đã có Git SHA sạch)
-cp artifacts/kaggle/cicdohbrw2020-statistical-baseline/experiment_manifest.json data/manifests/baseline_l1_manifest.json
-cp artifacts/kaggle/cicdohbrw2020-statistical-baseline/metrics.json data/manifests/baseline_l1_metrics.json
-
-# Đưa vào Git staging và tạo commit có chữ ký
-git add data/manifests/baseline_l1_manifest.json data/manifests/baseline_l1_metrics.json
-git commit -m "docs(manifest): record verified Kaggle statistical baseline metrics and provenance"
-```
+* **Điều kiện tiên quyết trước khi quảng bá (Promotion Prerequisite)**:
+  Chỉ được phép sao chép tệp manifest và metrics vào `data/manifests/` để commit vào Git khi mã nguồn kernel đã được commit sạch trong Git (`git_sha` hợp lệ, không phải `unknown_uncommitted_source`).
 
 ---
 
-## 9. Xử Lý Sự Cố Thường Gặp (Troubleshooting & FAQs)
+## 10. Xử Lý Sự Cố Thường Gặp (Troubleshooting & FAQs)
 
-### 9.1. Lỗi: `Missing required kernel ID`
-* **Triệu chứng:** Script báo `Error: Missing required kernel ID` khi chạy `push`, `status`, hoặc `pull`.
-* **Khắc phục:** Thiết lập biến môi trường trong shell:
+### 10.1. Lỗi: `Missing required kernel ID`
+* **Triệu chứng:** Script báo `Error: Missing required kernel ID`.
+* **Khắc phục:** Thiết lập biến môi trường tương ứng:
   ```bash
-  export KAGGLE_KERNEL_ID="<your-kaggle-username>/cicdohbrw2020-statistical-baseline"
-  ```
-  Hoặc truyền trực tiếp làm tham số:
-  ```bash
-  bash scripts/kaggle/status.sh <your-kaggle-username>/cicdohbrw2020-statistical-baseline
+  export KAGGLE_KERNEL_ID="<your-username>/cicdohbrw2020-statistical-baseline"
+  export KAGGLE_TIMESERIES_KERNEL_ID="<your-username>/cicdohbrw2020-timeseries-lstm"
   ```
 
-### 9.2. Lỗi: `Unauthorized` hoặc `401 - Unauthorized` từ Kaggle CLI
-* **Triệu chứng:** Lệnh Kaggle báo lỗi không có quyền truy cập hoặc token không hợp lệ.
-* **Khắc phục:**
-  1. Kiểm tra sự tồn tại của tệp `~/.kaggle/kaggle.json`.
-  2. Kiểm tra phân quyền: `ls -la ~/.kaggle/kaggle.json` phải hiển thị `-rw-------` (600).
-  3. Nếu token đã hết hạn hoặc bị thu hồi trên web, tạo lại token mới tại Kaggle Settings và thay thế tệp `~/.kaggle/kaggle.json`.
+### 10.2. Lỗi: `Unauthorized` hoặc `401 - Unauthorized` từ Kaggle CLI
+* **Triệu chứng:** Lệnh Kaggle báo không có quyền truy cập hoặc token không hợp lệ.
+* **Khắc phục:** Kiểm tra sự tồn tại của `~/.kaggle/kaggle.json` (phân quyền `600`) hoặc `~/.kaggle/access_token`.
 
-### 9.3. Lỗi: `Refusing to overwrite existing outputs without explicit --force`
-* **Triệu chứng:** Lệnh `pull_outputs.sh` từ chối tải tệp về vì thư mục `artifacts/kaggle/<slug>/` đã chứa dữ liệu từ phiên chạy trước.
-* **Khắc phục:** Thêm cờ `--force` để xác nhận ghi đè:
-  ```bash
-  bash scripts/kaggle/pull_outputs.sh --force
-  ```
+### 10.3. Lỗi: `Refusing to overwrite existing outputs without explicit --force`
+* **Triệu chứng:** `pull_outputs.sh` hoặc `pull_timeseries_outputs.sh` từ chối tải vì thư mục đích đã có dữ liệu.
+* **Khắc phục:** Thêm cờ `--force` để xác nhận ghi đè có chủ đích.
 
-### 9.4. Lỗi: `Kernel status is queued/running` khi chạy `pull_outputs.sh`
-* **Triệu chứng:** `pull_outputs.sh` từ chối tải về, in thông báo trạng thái hiện tại (ví dụ: `queued` hoặc `running`) và thoát với mã lỗi khác 0 mà không tạo thư mục đích.
-* **Khắc phục:** Không thực hiện tải tạo tác khi kernel chưa hoàn tất. Sử dụng `bash scripts/kaggle/status.sh` để tiếp tục giám sát cho tới khi trạng thái chuyển sang `complete`, sau đó mới thực thi lại `pull_outputs.sh`.
+### 10.4. Lỗi: `Kernel status is queued/running` khi chạy pull
+* **Triệu chứng:** Script tải tạo tác từ chối thực thi và báo kernel chưa `complete`.
+* **Khắc phục:** Giữ kiên nhẫn và dùng `status.sh` hoặc `status_timeseries_lstm.sh` để theo dõi cho tới khi hoàn tất.
 
-### 9.5. Lỗi: `No output files retrieved / empty artifact download`
-* **Triệu chứng:** `pull_outputs.sh` báo lỗi và thoát nonzero vì thư mục đầu ra không chứa bất kỳ tệp dữ liệu thông thường nào sau khi tải.
-* **Khắc phục:** Kiểm tra log thực thi của kernel qua giao diện web Kaggle để đảm bảo tác vụ không gặp lỗi ngầm trước khi tạo output, hoặc kiểm tra xem script kernel có kết xuất đúng tệp vào `/kaggle/working` hay không.
-
-### 9.6. Lỗi: `Ambiguous label column` hoặc Không Xác Định Được Nhãn
-* **Triệu chứng:** Script thoát với thông báo tìm thấy nhiều cột có từ khóa nhãn (ví dụ: vừa có `Label`, vừa có `label_code`).
-* **Khắc phục:** Mở `schema_audit.json`, quan sát mục `candidate_labels`, và chỉ định rõ ràng tên cột nhãn qua tham số:
-  ```bash
-  --label-column <ten_cot_chinh_xac>
-  ```
-
-### 9.7. Cảnh báo: `Kernel source is not tracked and clean in Git`
-* **Triệu chứng:** Khi chạy `push_statistical_baseline.sh`, màn hình hiển thị:
-  `Notice: Kernel source is not tracked and clean at parent git commit ... KAGGLE_GIT_SHA recorded as: unknown_uncommitted_source`.
-* **Nguyên nhân:** Thư mục dự án `doh_tunnel_detection/` chưa được commit vào kho lưu trữ Git hiện tại (đang là untracked trong worktree cha), hoặc có các tệp chưa được lưu/staging trong thư mục kernel.
-* **Ý nghĩa thực tế:**
-  1. Đối với **Audit Runs**: Lần chạy vẫn được phép tiến hành bình thường; tính toàn vẹn và xuất xứ của kernel được bảo đảm thông qua mã băm snapshot `KAGGLE_SOURCE_SNAPSHOT_SHA256`.
-  2. Đối với **Thực Nghiệm Huấn Luyện Chính Thức (Official Experiments)**: Kết quả tạo ra KHÔNG ĐƯỢC PHÉP quảng bá vào `data/manifests/` cho đến khi dự án được commit đầy đủ vào kho Git nhằm bảo đảm khả năng tái lập khoa học 100%.
-* **Khắc phục:** Thực hiện `git add doh_tunnel_detection/` và tạo commit Git trước khi chạy thực nghiệm huấn luyện chính thức.
-### 9.8. Upload PCAP ZIP lớn bị ngắt kết nối
-* **Triệu chứng:** Trình duyệt quay vòng không hiện tiến độ, hoặc upload ZIP PCAP bị ngắt do lỗi kết nối.
-* **Khắc phục:** Dùng CLI có thanh tiến độ thay vì tải qua trình duyệt:
+### 10.5. Lỗi: Upload PCAP ZIP lớn bị ngắt kết nối & Hành vi Kaggle CLI
+* **Triệu chứng:** Trình duyệt quay vòng không hiện tiến độ, hoặc upload ZIP PCAP bị ngắt giữa chừng do đường truyền mạng.
+* **Khắc phục:** Sử dụng script CLI chuyên biệt có thanh tiến độ và cơ chế bảo vệ:
   ```bash
   bash scripts/kaggle/upload_raw_pcap_dataset.sh
   ```
-  Script mặc định dùng `/Volumes/KINGSTON/PCAPs.zip`, tạo Dataset **private**, và chỉ tạo symbolic link trong `$HOME/.local/state/doh-reproduction/kaggle-pcap-upload`; không sao chép archive 80 GB vào project hay Git.
-  Script chấp nhận cả access token OAuth hiện có tại `~/.kaggle/access_token` lẫn token API cũ tại `~/.kaggle/kaggle.json`; không cần tạo token mới nếu `kaggle datasets list --mine` đã hoạt động.
-* **Khôi phục sau lỗi mạng:** Giữ nguyên archive, ổ đĩa nguồn, staging directory và `/tmp/.kaggle/uploads`, sau đó chạy lại đúng lệnh trên. Kaggle CLI lưu trạng thái resumable-upload theo đường dẫn tệp trong tối đa sáu ngày.
-* **Theo dõi server-side processing:** Khi CLI đã báo upload thành công, Kaggle vẫn có thể đang giải nén archive. Kiểm tra bằng:
-  ```bash
-  .venv-tools/bin/kaggle datasets status <owner/dataset-slug>
-  ```
-* **Giới hạn:** Kaggle giới hạn 200 GB cho mỗi dataset và tự giải nén archive. Kiểm tra local archive hiện tại cho thấy ZIP chứa 35 file với tổng uncompressed size `80,870,581,876` bytes, dưới giới hạn này.
+* **Hành vi khôi phục (Resumption State & Observed Reality)**:
+  * Script sử dụng symbolic link và duy trì trạng thái upload của Kaggle CLI tại thư mục `/tmp/.kaggle/uploads`.
+  * Khi Kaggle CLI hỗ trợ và endpoint máy chủ còn lưu phiên tải, việc chạy lại lệnh trên có thể tiếp tục phần tải dang dở. **Tuy nhiên, tính năng tiếp tục (resumption) không được đảm bảo tuyệt đối**: trong thực tế quan sát, Kaggle CLI đã từng khởi động lại việc tải byte từ đầu khi gặp lỗi sau khi đã truyền xong dữ liệu hoặc khi máy chủ Kaggle gặp lỗi tạo dataset (`Dataset creation error`).
+* **Quy chuẩn metadata bản quyền (`licenses`)**:
+  * Tệp siêu dữ liệu `dataset-metadata.json` khai báo trường `"licenses": [{"name": "other"}]`. Đây là định danh giấy phép hợp lệ duy nhất của Kaggle cho các bộ dữ liệu nghiên cứu học thuật của bên thứ ba (như UNB CIC DoHBrw-2020) có điều khoản ghi công và giới hạn phi thương mại.
+* **Cơ chế ngắt an toàn khi tạo dataset thất bại (Fail-on-create-error)**:
+  * Script kiểm tra chặt chẽ cả mã thoát (exit code) lẫn nhật ký thực thi. Nếu gặp thông báo `Upload unsuccessful` hoặc `Dataset creation error`, script lập tức dừng tiến trình (`exit 1`) và thông báo lỗi rõ ràng thay vì giả định thành công.
+  * Luôn xác minh trạng thái hoàn tất xử lý phía máy chủ bằng lệnh:
+    ```bash
+    .venv-tools/bin/kaggle datasets status <owner/dataset-slug>
+    ```
+### 10.6. Lỗi: Quá tải bộ nhớ RAM trên Kaggle khi chạy Time-Series
+* **Triệu chứng:** Kernel bị ngắt tiến trình với lỗi `Out Of Memory (OOM)` hoặc `Killed`.
+* **Khắc phục:** Mở `run_config.json`, giảm các giới hạn `max_capture_members` (xuống 50 hoặc 20) và `max_flows_per_class` (xuống 200 hoặc 100) để đảm bảo dữ liệu vừa vặn với bộ nhớ RAM 30 GB của Kaggle.
 
 ---
 
-## 10. Tóm Tắt Quy Trình Dành Cho Thành Viên Nhóm (Teammate Checklist)
+## 11. Tóm Tắt Quy Trình Dành Cho Thành Viên Nhóm (Teammate Checklist)
 
-Để một thành viên mới trong nhóm có thể bắt đầu vận hành ngay lập tức:
-
+### Lộ Trình 1: Khởi Tạo Công Cụ Chung
 - [ ] **Bước 1:** Tạo Kaggle API token tại web, lưu tại `~/.kaggle/kaggle.json`, chạy `chmod 600 ~/.kaggle/kaggle.json`.
 - [ ] **Bước 2:** Xác minh an toàn: `kaggle datasets list --mine > /dev/null 2>&1 && echo OK`.
 - [ ] **Bước 3:** Khởi tạo môi trường ảo công cụ: `bash scripts/kaggle/bootstrap_cli.sh`.
-- [ ] **Bước 4:** Thiết lập ID kernel: `export KAGGLE_KERNEL_ID="<username>/cicdohbrw2020-statistical-baseline"`.
-- [ ] **Bước 5:** Đẩy chạy kiểm toán trước: `bash scripts/kaggle/push_statistical_baseline.sh` (chạy với mã băm snapshot `KAGGLE_SOURCE_SNAPSHOT_SHA256`).
-- [ ] **Bước 6:** Giám sát trạng thái: `bash scripts/kaggle/status.sh` cho tới khi `complete` (tuyệt đối không pull khi kernel còn ở trạng thái `queued` hoặc `running`).
-- [ ] **Bước 7:** Tải tạo tác: `bash scripts/kaggle/pull_outputs.sh` (chỉ chạy sau khi status xác nhận `complete`; script tự động từ chối nếu kernel chưa chạy xong hoặc tải về thư mục rỗng).
-- [ ] **Bước 8:** Mở `schema_audit.json`, kiểm tra số đếm nhãn toàn bộ cột (`value_counts`, `complete_column_audit: true` - tuyệt đối không suy đoán từ mẫu hàng đầu), xác định tệp dữ liệu bảng (`data_file`, ví dụ: `L1-DoH-NonDoH.parquet`), tên cột nhãn và giá trị lớp; chỉ chuyển `run_config.json` từ `"audit"` sang `"train"` sau khi số đếm lớp được phê duyệt.
-- [ ] **Bước 9:** Commit mã nguồn vào Git để có Git SHA sạch trước khi thực hiện chạy huấn luyện chính thức.
-- [ ] **Bước 10:** Đẩy chạy huấn luyện, kiểm tra trạng thái và tải tạo tác kết quả.
-- [ ] **Bước 11:** Quảng bá duy nhất `metrics.json` và `experiment_manifest.json` (đã có Git commit SHA và Snapshot SHA xác thực) vào Git theo dõi.
+
+### Lộ Trình 2: Huấn Luyện Baseline Thống Kê (Tabular Baseline)
+- [ ] **Bước 4:** Thiết lập ID: `export KAGGLE_KERNEL_ID="<username>/cicdohbrw2020-statistical-baseline"`.
+- [ ] **Bước 5:** Đẩy chạy kiểm toán trước: `bash scripts/kaggle/push_statistical_baseline.sh`.
+- [ ] **Bước 6:** Giám sát trạng thái: `bash scripts/kaggle/status.sh` cho tới khi `complete`.
+- [ ] **Bước 7:** Tải tạo tác kiểm toán: `bash scripts/kaggle/pull_outputs.sh --force`.
+- [ ] **Bước 8:** Mở `schema_audit.json`, xác định tệp bảng (`L1-DoH-NonDoH.parquet`), cột nhãn và phân bố lớp; chuyển `run_config.json` sang `"train"`, commit Git sạch, rồi chạy lại chu trình push $\to$ status $\to$ pull.
+
+### Lộ Trình 3: Tái Hiện Chuỗi Thời Gian Packet-Clump (Raw-PCAP Time-Series)
+- [ ] **Bước 9:** Tải lên bộ dữ liệu thô: `bash scripts/kaggle/upload_raw_pcap_dataset.sh` và kiểm tra `kaggle datasets status <owner/dataset-slug>` đến khi sẵn sàng.
+- [ ] **Bước 10:** Thiết lập ID: `export KAGGLE_TIMESERIES_KERNEL_ID="<username>/cicdohbrw2020-timeseries-lstm"`.
+- [ ] **Bước 11:** Chạy kiểm toán PCAP trước: bảo đảm `run_config.json` ở `"mode": "audit"`, chạy `bash scripts/kaggle/push_timeseries_lstm.sh`.
+- [ ] **Bước 12:** Giám sát trạng thái: `bash scripts/kaggle/status_timeseries_lstm.sh` cho tới khi `complete`.
+- [ ] **Bước 13:** Tải tạo tác kiểm toán: `bash scripts/kaggle/pull_timeseries_outputs.sh --force`, kiểm tra `pcap_audit.json` về danh sách capture và kịch bản.
+- [ ] **Bước 14:** Chuyển `run_config.json` sang `"mode": "train"`, commit mã nguồn vào Git để có Git SHA sạch, sau đó thực hiện push $\to$ status $\to$ pull để huấn luyện và đánh giá mô hình.
+- [ ] **Bước 15:** Chỉ quảng bá các tệp JSON/CSV kết quả (`pcap_audit.json`, `metrics.json`, `experiment_manifest.json`) vào `data/manifests/` của Git.

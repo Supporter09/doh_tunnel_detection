@@ -813,13 +813,46 @@ def generate_timeseries_window_sweep_table(
     ]
     rows: list[list[Any]] = []
 
-    # Map project runs if provided with strict task filtering to prevent cross-contamination
-    l1_project_map: dict[int, Mapping[str, Any]] = _extract_window_sweep_map(
-        l1_metrics, task="l1", model="paper_v4"
-    ) or _extract_window_sweep_map(l1_metrics, task="l1")
-    l2_project_map: dict[int, Mapping[str, Any]] = _extract_window_sweep_map(
-        l2_metrics, task="l2", model="paper_v4"
-    ) or _extract_window_sweep_map(l2_metrics, task="l2")
+    # Map project runs: for paper window sweeps, prefer paper-replication flow-random runs
+    # (model=paper_v4, split_protocol=paper_flow_random); fall back to corrected session-disjoint
+    # only if flow-random is absent, then general fallback.
+    l1_fr_map = _extract_window_sweep_map(
+        l1_metrics, task="l1", model="paper_v4", split_protocol=SplitProtocol.PAPER_FLOW_RANDOM.value
+    )
+    l1_gd_map = _extract_window_sweep_map(
+        l1_metrics, task="l1", model="paper_v4", split_protocol=SplitProtocol.SESSION_SCENARIO_DISJOINT.value
+    )
+    l1_fallback_map = (
+        _extract_window_sweep_map(l1_metrics, task="l1", model="paper_v4")
+        or _extract_window_sweep_map(l1_metrics, task="l1")
+    )
+    l1_project_map: dict[int, Mapping[str, Any]] = {}
+    for w in range(1, 11):
+        if w in l1_fr_map:
+            l1_project_map[w] = l1_fr_map[w]
+        elif w in l1_gd_map:
+            l1_project_map[w] = l1_gd_map[w]
+        elif w in l1_fallback_map:
+            l1_project_map[w] = l1_fallback_map[w]
+
+    l2_fr_map = _extract_window_sweep_map(
+        l2_metrics, task="l2", model="paper_v4", split_protocol=SplitProtocol.PAPER_FLOW_RANDOM.value
+    )
+    l2_gd_map = _extract_window_sweep_map(
+        l2_metrics, task="l2", model="paper_v4", split_protocol=SplitProtocol.SESSION_SCENARIO_DISJOINT.value
+    )
+    l2_fallback_map = (
+        _extract_window_sweep_map(l2_metrics, task="l2", model="paper_v4")
+        or _extract_window_sweep_map(l2_metrics, task="l2")
+    )
+    l2_project_map: dict[int, Mapping[str, Any]] = {}
+    for w in range(1, 11):
+        if w in l2_fr_map:
+            l2_project_map[w] = l2_fr_map[w]
+        elif w in l2_gd_map:
+            l2_project_map[w] = l2_gd_map[w]
+        elif w in l2_fallback_map:
+            l2_project_map[w] = l2_fallback_map[w]
     # 1. Layer 1 Sweeps (l = 1 .. 10)
     for p_row in PAPER_TABLE_V:
         w = p_row.window_length_l
@@ -845,11 +878,12 @@ def generate_timeseries_window_sweep_table(
             lat = proj.get("latencies_seconds", {}) if isinstance(proj.get("latencies_seconds"), Mapping) else {}
             m_arch = proj.get("model", proj.get("model_architecture", "Project LSTM Replication"))
             split = proj.get("split_protocol", SplitProtocol.PAPER_FLOW_RANDOM.value)
-            prov = (
-                ProvenanceStatus.PROJECT_IMPROVED
-                if "improved" in str(m_arch).lower() or "disjoint" in str(split).lower()
-                else ProvenanceStatus.PROJECT_REPLICATION_FLOW_RANDOM
-            )
+            if "improved" in str(m_arch).lower():
+                prov = ProvenanceStatus.PROJECT_IMPROVED
+            elif "disjoint" in str(split).lower():
+                prov = ProvenanceStatus.PROJECT_CORRECTED_GROUP_DISJOINT
+            else:
+                prov = ProvenanceStatus.PROJECT_REPLICATION_FLOW_RANDOM
             prec = _get_metric_val(m, "precision")
             rec = _get_metric_val(m, "recall")
             f1_v = _get_metric_val(m, "f1_score")
@@ -901,25 +935,16 @@ def generate_timeseries_window_sweep_table(
 
         if w in l2_project_map:
             proj = l2_project_map[w]
-            m = proj.get("metrics", {})
-            lat = proj.get("latencies_seconds", {})
-            m_arch = proj.get("model_architecture", "Project LSTM Replication")
-            split = proj.get("split_protocol", SplitProtocol.PAPER_FLOW_RANDOM.value)
-            prov = (
-                ProvenanceStatus.PROJECT_IMPROVED
-                if "improved" in str(m_arch).lower() or "disjoint" in str(split).lower()
-                else ProvenanceStatus.PROJECT_REPLICATION_FLOW_RANDOM
-            )
-            proj = l2_project_map[w]
             m = proj.get("metrics") if isinstance(proj.get("metrics"), Mapping) else proj
             lat = proj.get("latencies_seconds", {}) if isinstance(proj.get("latencies_seconds"), Mapping) else {}
             m_arch = proj.get("model", proj.get("model_architecture", "Project LSTM Replication"))
             split = proj.get("split_protocol", SplitProtocol.PAPER_FLOW_RANDOM.value)
-            prov = (
-                ProvenanceStatus.PROJECT_IMPROVED
-                if "improved" in str(m_arch).lower() or "disjoint" in str(split).lower()
-                else ProvenanceStatus.PROJECT_REPLICATION_FLOW_RANDOM
-            )
+            if "improved" in str(m_arch).lower():
+                prov = ProvenanceStatus.PROJECT_IMPROVED
+            elif "disjoint" in str(split).lower():
+                prov = ProvenanceStatus.PROJECT_CORRECTED_GROUP_DISJOINT
+            else:
+                prov = ProvenanceStatus.PROJECT_REPLICATION_FLOW_RANDOM
             prec = _get_metric_val(m, "precision")
             rec = _get_metric_val(m, "recall")
             f1_v = _get_metric_val(m, "f1_score")
