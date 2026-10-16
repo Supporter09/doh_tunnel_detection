@@ -98,8 +98,7 @@ cat > "$UPLOAD_ROOT/dataset-metadata.json" <<EOF
   "subtitle": "Private raw PCAP archive for packet-clump replication experiments",
   "description": "Private research copy of the CIRA-CIC-DoHBrw-2020 PCAP archive obtained from the CIC/UNB distribution. Source terms and attribution remain applicable. This dataset is for the team's defensive packet-clump and time-series replication experiments only.",
   "id": "$DATASET_ID",
-  "licenses": [{"name": "other"}],
-  "keywords": ["network-security", "cybersecurity", "network-traffic"]
+  "licenses": [{"name": "other"}]
 }
 EOF
 
@@ -126,11 +125,18 @@ if (( UPLOAD_STATUS != 0 )) \
     exit 1
 fi
 
-if ! "$KAGGLE_CLI" datasets status "$DATASET_ID" >/dev/null 2>&1; then
-    echo "Upload command returned without a confirmed Kaggle dataset. Resumable state was preserved." >&2
+if "$KAGGLE_CLI" datasets status "$DATASET_ID" >/dev/null 2>&1; then
+    echo "Upload completed and the Kaggle dataset is queryable."
+elif grep -Fq 'Your private Dataset is being created.' "$UPLOAD_LOG"; then
+    echo "Upload completed and Kaggle accepted private dataset creation."
+    echo "The status/files endpoints may return 403 until the 75 GiB archive finishes processing."
+else
+    echo "Upload command returned without confirmation that Kaggle accepted dataset creation." >&2
+    echo "Resumable state was preserved; inspect the Kaggle dataset page before retrying." >&2
     exit 1
 fi
 
-echo "Upload completed. Kaggle may still be unpacking the archive server-side."
-echo "Monitor processing with:"
-echo "  $KAGGLE_CLI datasets status $DATASET_ID"
+echo "Dataset page:"
+echo "  https://www.kaggle.com/datasets/$DATASET_ID"
+echo "Check visibility with:"
+echo "  $KAGGLE_CLI datasets list --mine --csv"
