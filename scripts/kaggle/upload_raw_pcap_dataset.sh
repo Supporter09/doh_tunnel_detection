@@ -98,11 +98,16 @@ cat > "$UPLOAD_ROOT/dataset-metadata.json" <<EOF
   "subtitle": "Private raw PCAP archive for packet-clump replication experiments",
   "description": "Private research copy of the CIRA-CIC-DoHBrw-2020 PCAP archive obtained from the CIC/UNB distribution. Source terms and attribution remain applicable. This dataset is for the team's defensive packet-clump and time-series replication experiments only.",
   "id": "$DATASET_ID",
-  "licenses": [{"name": "copyright-authors"}],
+  "licenses": [{"name": "other"}],
   "keywords": ["network-security", "cybersecurity", "network-traffic"]
 }
 EOF
 
+UPLOAD_LOG="$(mktemp "${TMPDIR:-/tmp}/kaggle-pcap-upload.XXXXXXXXXX.log")"
+cleanup_upload_log() {
+    rm -f "$UPLOAD_LOG"
+}
+trap cleanup_upload_log EXIT
 trap 'echo; echo "Upload interrupted or failed. Keep the archive, staging directory, and /tmp/.kaggle/uploads; rerun this exact command to resume." >&2' ERR INT TERM
 
 echo "Preparing private Kaggle dataset: $DATASET_ID"
@@ -110,7 +115,21 @@ echo "Archive: $PCAP_ZIP"
 echo "Size: $ARCHIVE_BYTES bytes"
 echo "Resumable state: /tmp/.kaggle/uploads"
 echo "Starting upload now; leave this terminal and the KINGSTON drive connected."
-"$KAGGLE_CLI" datasets create --path "$UPLOAD_ROOT" --keep-tabular --dir-mode skip
+set +e
+"$KAGGLE_CLI" datasets create --path "$UPLOAD_ROOT" --keep-tabular --dir-mode skip 2>&1 | tee "$UPLOAD_LOG"
+UPLOAD_STATUS="${PIPESTATUS[0]}"
+set -e
+
+if (( UPLOAD_STATUS != 0 )) \
+    || grep -Eq 'Upload unsuccessful|Dataset creation error' "$UPLOAD_LOG"; then
+    echo "Upload did not complete. Kaggle resumable state was preserved; rerun this command to resume." >&2
+    exit 1
+fi
+
+if ! "$KAGGLE_CLI" datasets status "$DATASET_ID" >/dev/null 2>&1; then
+    echo "Upload command returned without a confirmed Kaggle dataset. Resumable state was preserved." >&2
+    exit 1
+fi
 
 echo "Upload completed. Kaggle may still be unpacking the archive server-side."
 echo "Monitor processing with:"

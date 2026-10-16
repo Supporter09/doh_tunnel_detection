@@ -1,0 +1,8 @@
+# Python dependencies for Kaggle Script time-series packet-clump LSTM runner
+# Kaggle execution environments (CPU / GPU) include pre-installed PyTorch, NumPy, and Scikit-Learn.
+# The packages below define the required runtime dependencies for local testing, CI, and remote execution.
+dpkt>=1.9.8
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+torch>=2.0.0

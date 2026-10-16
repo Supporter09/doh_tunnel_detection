@@ -1,0 +1,17 @@
+{
+  "id": "INSERT_KAGGLE_USERNAME/cicdohbrw2020-timeseries-lstm",
+  "title": "CICDoHBrw2020 Time-Series Clump LSTM",
+  "code_file": "train_timeseries.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "dataset_sources": [
+    "nhtminhmai/cicdohbrw2020-raw-pcaps"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
