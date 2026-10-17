@@ -281,6 +281,57 @@ class TestUnavailableResultBehavior(unittest.TestCase):
         self.assertEqual(format_latency(1.397, 2), "1.40 s")
 
 
+class TestObservedImprovementEvidence(unittest.TestCase):
+    """Verify that improvement claims are derived from corrected observed runs."""
+
+    def test_bi_gru_success_claim_uses_best_group_disjoint_f1(self) -> None:
+        runs = []
+        for task, baseline, improved in (
+            ("l1", 0.917863, 0.965116),
+            ("l2", 0.942457, 0.986439),
+        ):
+            runs.extend([
+                {
+                    "task": task,
+                    "model": "paper_v4",
+                    "window_size": 5,
+                    "split_protocol": "session_scenario_disjoint",
+                    "f1_score": baseline,
+                },
+                {
+                    "task": task,
+                    "model": "improved_bidi_gru",
+                    "window_size": 7,
+                    "split_protocol": "session_scenario_disjoint",
+                    "f1_score": improved,
+                },
+            ])
+
+        table = generate_improvements_table(timeseries_metrics={"runs": runs})
+        neural_row = next(row for row in table.rows if row[0] == "5. Neural Architecture")
+
+        self.assertEqual(neural_row[5], "verified improvement")
+        self.assertIn("L1 0.9179->0.9651 (+4.73 pp)", neural_row[4])
+        self.assertIn("L2 0.9425->0.9864 (+4.40 pp)", neural_row[4])
+
+    def test_bi_gru_without_corrected_observations_is_not_claimed_successful(self) -> None:
+        table = generate_improvements_table(
+            timeseries_metrics={
+                "runs": [{
+                    "task": "l1",
+                    "model": "improved_bidi_gru",
+                    "window_size": 7,
+                    "split_protocol": "paper_flow_random",
+                    "f1_score": 0.99,
+                }]
+            }
+        )
+        neural_row = next(row for row in table.rows if row[0] == "5. Neural Architecture")
+
+        self.assertEqual(neural_row[5], "implemented")
+        self.assertIn("Awaiting observed comparison", neural_row[4])
+
+
 class TestSchemaValidationAndRejection(unittest.TestCase):
     """Verify strict validation and rejection of invalid/incompatible metric payloads."""
 

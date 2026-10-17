@@ -1,0 +1,8 @@
+Layer,Methodology,Window / Horizon,F1-Score,Mean Duration,Median Duration,Latency Reduction vs Flow Baseline,Operational Practicality
+Layer 1 (DoH vs Non-DoH),Full-Flow 28 Features (Paper RF),Entire flow duration,0.993,20.393 s,1.397 s,Baseline (0.0%),High latency; flow must complete or reach timeout before classification
+Layer 1 (DoH vs Non-DoH),Packet Clump LSTM (l=1),First clump (1 packet burst),0.876,0.081 s,0.000 s,99.6% reduction (mean),"Sub-100ms early alert, but precision (0.877) has higher false alarm rate"
+Layer 1 (DoH vs Non-DoH),"Packet Clump LSTM (l=6, Paper Optimal)",First 6 clumps,0.993,0.574 s,0.047 s,97.2% reduction (mean),Optimal sweet spot: matches RF (0.993 F1) in < 0.6s mean delay (100% < 0.8s)
+Layer 2 (Benign DoH vs Malicious DoH),Full-Flow 28 Features (Paper RF),Entire flow duration,0.999,53.924 s,34.064 s,Baseline (0.0%),Extremely high latency (~54s mean); unviable for active inline tunnel prevention
+Layer 2 (Benign DoH vs Malicious DoH),Packet Clump LSTM (l=1),First clump (1 packet burst),0.782,0.164 s,0.002 s,99.7% reduction (mean),"Fastest tunnel triage, but low F1 (0.782) misses stealthy tunnels"
+Layer 2 (Benign DoH vs Malicious DoH),"Packet Clump LSTM (l=3, Paper Optimal)",First 3 clumps,0.991,0.502 s,0.050 s,99.1% reduction (mean),Optimal sweet spot: matches RF (0.991 F1) in ~0.5s mean delay (100% < 1.0s)
+Layer 2 (Benign DoH vs Malicious DoH),Packet Clump LSTM (l=6),First 6 clumps,0.998,1.063 s,0.203 s,98.0% reduction (mean),Near-perfect tunnel identification (0.998 F1) within ~1.06s

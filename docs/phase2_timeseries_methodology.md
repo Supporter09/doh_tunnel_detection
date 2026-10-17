@@ -343,13 +343,19 @@ run_config.json ("mode": "train")
 | **Statistical Flow** | L2 | Kaggle Mirror v3 (29 đặc trưng) | HistGradientBoosting | 80/20 Flow Random | **0.9999** | **[Project-Observed] (Verified)** |
 | **Statistical Flow** | L2 | Paper 2020 (28 đặc trưng) | Random Forest | 80/20 Flow Random | **0.9990** | **[Paper-Reported] (Immutable)** |
 | **Clump Sequence ($\ell=6$)** | L1 | Paper 2020 (5-tuple Clumps) | 4-Layer LSTM | 80/20 Flow Random | **0.9930** | **[Paper-Reported] (Immutable)** |
-| **Clump Sequence ($\ell=6$)** | L1 | Raw PCAP (DoHLyzer Clumps) | Paper v4 LSTM | 80/20 Flow Random | *unavailable* | **[Unavailable] (Pending Execution)** |
-| **Clump Sequence ($\ell=6$)** | L1 | Raw PCAP (DoHLyzer Clumps) | Paper v4 LSTM | 70/15/15 Disjoint | *unavailable* | **[Unavailable] (Pending Execution)** |
-| **Clump Sequence ($\ell=6$)** | L1 | Raw PCAP (DoHLyzer Clumps) | Masked BiGRU | 70/15/15 Disjoint | *unavailable* | **[Unavailable] (Pending Execution)** |
+| **Clump Sequence ($\ell=6$)** | L1 | Raw PCAP (DoHLyzer Clumps) | Paper v4 LSTM | 80/20 Flow Random | **0.9784** | **[Project-Replication] (Observed)** |
+| **Clump Sequence ($\ell=6$)** | L1 | Raw PCAP (DoHLyzer Clumps) | Paper v4 LSTM | 70/15/15 Disjoint | **0.0000** | **[Project-Corrected] (Observed; recall collapse at paper window)** |
+| **Clump Sequence ($\ell=6$)** | L1 | Raw PCAP (DoHLyzer Clumps) | Masked BiGRU | 70/15/15 Disjoint | **0.9153** | **[Project-Improved] (Observed)** |
+| **Best corrected ($\ell=5/7$)** | L1 | Raw PCAP (DoHLyzer Clumps) | Paper v4 / Masked BiGRU | 70/15/15 Disjoint | **0.9179 / 0.9651** | **BiGRU +4.73 pp F1** |
 | **Clump Sequence ($\ell=3$)** | L2 | Paper 2020 (5-tuple Clumps) | 4-Layer LSTM | 80/20 Flow Random | **0.9910** | **[Paper-Reported] (Immutable)** |
-| **Clump Sequence ($\ell=3$)** | L2 | Raw PCAP (DoHLyzer Clumps) | Paper v4 LSTM | 80/20 Flow Random | *unavailable* | **[Unavailable] (Pending Execution)** |
-| **Clump Sequence ($\ell=3$)** | L2 | Raw PCAP (DoHLyzer Clumps) | Paper v4 LSTM | 70/15/15 Disjoint | *unavailable* | **[Unavailable] (Pending Execution)** |
-| **Clump Sequence ($\ell=3$)** | L2 | Raw PCAP (DoHLyzer Clumps) | Masked BiGRU | 70/15/15 Disjoint | *unavailable* | **[Unavailable] (Pending Execution)** |
+| **Clump Sequence ($\ell=3$)** | L2 | Raw PCAP (DoHLyzer Clumps) | Paper v4 LSTM | 80/20 Flow Random | **0.9405** | **[Project-Replication] (Observed)** |
+| **Clump Sequence ($\ell=3$)** | L2 | Raw PCAP (DoHLyzer Clumps) | Paper v4 LSTM | 70/15/15 Disjoint | **0.1324** | **[Project-Corrected] (Observed)** |
+| **Clump Sequence ($\ell=3$)** | L2 | Raw PCAP (DoHLyzer Clumps) | Masked BiGRU | 70/15/15 Disjoint | **0.5538** | **[Project-Improved] (Observed)** |
+| **Best corrected ($\ell=9/10$)** | L2 | Raw PCAP (DoHLyzer Clumps) | Paper v4 / Masked BiGRU | 70/15/15 Disjoint | **0.9425 / 0.9864** | **BiGRU +4.40 pp F1** |
+
+**Biên diễn giải của lần chạy:** đây là thực nghiệm có giới hạn tài nguyên, không phải huấn luyện hội tụ trên toàn bộ 97 GB dữ liệu. Audit tìm thấy 13.754 capture sources và 13.150 session; collector xử lý 201.321 flows nhưng giữ 1.325 flows (`non_doh=500`, `benign_doh=325`, `malicious_doh=500`) do giới hạn 25 flows/capture và quota 500/class. Vì lớp benign chỉ đạt 325 flows, manifest ghi `class_quotas_satisfied=false`. Một capture iodine bị bỏ qua do `invalid pcapng header`. Tổng cộng 80 cấu hình đánh giá đã hoàn thành; mọi kết luận cải tiến chỉ áp dụng cho mẫu có giới hạn và seed 42 này.
+
+**Kết luận hợp lệ:** dưới giao thức group-disjoint đã hiệu chỉnh, BiGRU tốt hơn Paper v4 ở best-window cho cả L1 (**+4,73 điểm phần trăm F1**) và L2 (**+4,40 điểm phần trăm F1**), đồng thời đạt FPR quan sát bằng 0 tại hai operating point tốt nhất. Không được diễn giải `FPR=0` thành cam kết vận hành ngoài mẫu; test set vẫn hữu hạn và ngưỡng được chọn từ validation.
 
 ---
 

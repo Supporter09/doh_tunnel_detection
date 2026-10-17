@@ -1646,6 +1646,49 @@ def generate_improvements_table(
         "Demonstrated Benefit",
         "Status",
     ]
+
+    neural_benefit = "Awaiting observed comparison against the paper_v4 baseline"
+    neural_status = "implemented" if timeseries_metrics else "ready"
+    if timeseries_metrics:
+        corrected_runs = [
+            run
+            for run in timeseries_metrics.get("runs", [])
+            if isinstance(run, Mapping)
+            and run.get("split_protocol") == "session_scenario_disjoint"
+        ]
+
+        def best_f1(task: str, model: str) -> Optional[float]:
+            values: list[float] = []
+            for run in corrected_runs:
+                if run.get("task") != task or run.get("model") != model:
+                    continue
+                metrics = run.get("metrics") if isinstance(run.get("metrics"), Mapping) else run
+                value = metrics.get("f1_score", metrics.get("f1"))
+                if isinstance(value, (int, float)):
+                    values.append(float(value))
+            return max(values) if values else None
+
+        comparisons: list[str] = []
+        deltas: list[float] = []
+        for task in ("l1", "l2"):
+            baseline_f1 = best_f1(task, "paper_v4")
+            improved_f1 = best_f1(task, "improved_bidi_gru")
+            if baseline_f1 is None or improved_f1 is None:
+                continue
+            delta = improved_f1 - baseline_f1
+            deltas.append(delta)
+            comparisons.append(
+                f"{task.upper()} {baseline_f1:.4f}->{improved_f1:.4f} ({delta * 100:+.2f} pp)"
+            )
+
+        if comparisons:
+            neural_benefit = "Best corrected group-disjoint F1: " + "; ".join(comparisons)
+            neural_status = (
+                "verified improvement"
+                if len(comparisons) == 2 and all(delta > 0 for delta in deltas)
+                else "mixed observed result"
+            )
+
     rows: list[list[Any]] = [
         [
             "1. Algorithm Bug Fix",
@@ -1692,15 +1735,15 @@ def generate_improvements_table(
             "Mask-Aware BiGRU with Attention",
             "Vanilla unidirectional LSTM with zero/negative padding and uniform aggregation",
             "Bidirectional GRU with explicit masking and learned multi-head attention pooling",
-            "Handles variable-length clump sequences gracefully; emphasizes informative bursts",
-            "implemented" if timeseries_metrics else "ready",
+            neural_benefit,
+            neural_status,
         ],
         [
             "6. Reproducibility",
             "Immutable Manifests & Auditing",
             "Omitted Adam optimizer, learning rates, batch sizes, seeds, and dataset versions",
-            "Complete JSON artifact contracts, SHA-256 dataset pinning, and deterministic test gates",
-            "100% reproducible experimental pipeline from raw PCAP to published tables",
+            "Complete JSON artifact contracts, source-snapshot SHA-256 pinning, and deterministic test gates",
+            "Reproduces the exact evaluated code/config boundary without claiming a full-dataset hash",
             "verified",
         ],
     ]
