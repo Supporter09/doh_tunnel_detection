@@ -76,9 +76,9 @@ When each model is compared at its own best corrected window, layer-one F1 incre
 
 ---
 
-# 14_What the current evidence does—and does not—establish
+# 14_Traffic collection dominates detection time
 
-Four limitations constrain interpretation. The per-capture cap limits convergence evidence, benign DoH availability stops at 325 retained flows, all traffic comes from one benchmark environment, and best windows are selected after the sweep. Larger caps, repeated seeds, confidence intervals, external datasets, and a locked holdout are the next required checks.
+Phase A now separates where detection time is spent. At the best corrected BiGRU windows, Layer 1 reaches F1 0.9651 with 0.871-second median end-to-end delay, while Layer 2 reaches F1 0.9864 with 3.513 seconds. Model inference itself is only 0.132 and 0.168 milliseconds on the ARM CPU; traffic collection dominates. The approximately 30-second p95 tail and the small first-window test-flow counts remain important caveats. Phase B therefore scales caps 25, 50, 100, and 250 on the Windows CUDA machine, with an uncapped run only after split, RAM, metric, and latency gates pass.
 
 ---
 

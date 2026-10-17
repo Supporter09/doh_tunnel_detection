@@ -1,0 +1,142 @@
+{
+  "manifest_version": "1.0.0",
+  "execution_mode": "train",
+  "status": "training_completed",
+  "dataset_slug": "local-verified-cicdohbrw2020-members",
+  "dataset_version": "local-member-extraction-2026-10-17",
+  "config_source": "cli_file:doh-phase-a-latency-config.json",
+  "resolved_config": {
+    "mode": "train",
+    "dataset_dir": "/Volumes/KINGSTON/PCAPs_members",
+    "dataset_slug": "local-verified-cicdohbrw2020-members",
+    "dataset_version": "local-member-extraction-2026-10-17",
+    "task": "both",
+    "split_protocol": "session_scenario_disjoint",
+    "window_sizes": [
+      5,
+      7,
+      9,
+      10
+    ],
+    "models": [
+      "paper_v4",
+      "improved_bidi_gru"
+    ],
+    "seed": 42,
+    "max_capture_members": 20000,
+    "max_flows_per_class": 500,
+    "max_flows_per_capture": 25,
+    "max_raw_packets": 1000000,
+    "max_raw_bytes": 1073741824,
+    "max_capture_packets": 200000,
+    "max_capture_bytes": 536870912,
+    "max_flow_packets": 10000,
+    "max_flow_bytes": 52428800,
+    "max_windows_per_flow": 1000,
+    "max_windows_per_class": 10000,
+    "max_standalone_capture_bytes": 21474836480,
+    "max_member_bytes": 10737418240,
+    "max_nested_archive_bytes": 26843545600,
+    "max_total_uncompressed_bytes": 214748364800,
+    "max_compression_ratio": 100.0,
+    "target_false_positive_rate": 0.001,
+    "epochs": 15,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "patience": 5,
+    "enable_score_calibration": true,
+    "enable_latency_benchmark": true,
+    "latency_warmup_iterations": 25,
+    "latency_max_samples": 500,
+    "description": "Phase A operational latency benchmark on capped raw-PCAP first-window test flows under session/scenario-disjoint evaluation."
+  },
+  "resource_bounds": {
+    "is_capped_run": true,
+    "active_caps": {
+      "max_capture_members": 20000,
+      "max_flows_per_class": 500,
+      "max_flows_per_capture": 25,
+      "max_raw_packets": 1000000,
+      "max_raw_bytes": 1073741824,
+      "max_capture_packets": 200000,
+      "max_capture_bytes": 536870912,
+      "max_flow_packets": 10000,
+      "max_flow_bytes": 52428800,
+      "max_windows_per_flow": 1000,
+      "max_windows_per_class": 10000,
+      "max_standalone_capture_bytes": 21474836480,
+      "max_member_bytes": 10737418240,
+      "max_nested_archive_bytes": 26843545600,
+      "max_total_uncompressed_bytes": 214748364800,
+      "max_compression_ratio": 100.0
+    },
+    "truncation_counters": {
+      "sources_discovered": 13754,
+      "sources_truncated_by_max_members": false,
+      "raw_packets_read": 213146811,
+      "raw_bytes_read": 33430249923,
+      "raw_packets_capped": false,
+      "raw_bytes_capped": false,
+      "accepted_packets": 86429671,
+      "accepted_bytes": 17029556562,
+      "capture_truncated": true,
+      "flows_processed": 201321,
+      "flows_retained": 1325,
+      "flows_truncated_by_flow_caps": 3030,
+      "class_quotas_satisfied": false,
+      "windows_generated": 128787,
+      "windows_truncated_by_flow_cap": 0,
+      "windows_truncated_by_class_cap": 2652
+    }
+  },
+  "provenance": {
+    "git_sha": "unknown",
+    "source_snapshot_sha256": "unknown",
+    "timestamp_utc": "2026-10-17T10:39:40Z",
+    "embedded_config_present": false
+  },
+  "software_versions": {
+    "python": "3.13.3",
+    "numpy": "2.5.4",
+    "torch": "2.14.1",
+    "torch_cuda_available": false,
+    "dpkt": "1.9.8",
+    "scikit_learn": "1.9.1",
+    "scipy": "1.18.1"
+  },
+  "hardware_info": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "processor": "arm",
+    "cpu_count": 10
+  },
+  "claim_boundaries": {
+    "paper_replication": "Reconstructs MontazeriShatoori et al. (2020) packet-clumping LSTM (DoHLyzer v4.py) with 1ms clumping timeout, reference feature order [interarrival, duration, size, packet_count, direction], and flow-random 80/20 split. Marked with explicit data leakage caveat due to cross-partition session overlap.",
+    "reference_facts": "DoHLyzer v4.py reference implementation architecture: Dense(10, ReLU) -> LSTM(8*l, ReLU) -> Dense(6*l, ReLU) -> Dropout(0.2) -> Dense(2*l, ReLU) -> Dense(1, Sigmoid). Normalization formulas verified from DoHLyzer analyzer/dataset.py. Training hyperparameters (Adam, learning rate, batch size, epochs, patience) were omitted in the published paper and represent project decisions.",
+    "project_improvements": "Corrected evaluation protocol: Session/scenario-disjoint 70/15/15 group split proving zero session overlap across partitions; mask-aware Bidirectional GRU model with attention pooling; class-weighted BCE loss; validation-only Platt probability calibration and decision threshold selection under strict target FPR constraint (FPR <= 0.001). Never tunes threshold on test data.",
+    "operational_latency": "Phase A operational latency microbenchmarks measured on first-window-per-test-flow samples with batch size 1, warm-up iterations, and CUDA synchronization. Evaluates traffic collection delay (physical clump network observation time), sequence preprocessing, and PyTorch model forward pass. Traffic collection delay is derived from clump timestamps/durations; preprocessing and inference are timed in-memory without disk I/O."
+  },
+  "execution_summary": {
+    "tasks_evaluated": [
+      "l1",
+      "l2"
+    ],
+    "models_evaluated": [
+      "improved_bidi_gru",
+      "paper_v4"
+    ],
+    "window_sizes_evaluated": [
+      5,
+      7,
+      9,
+      10
+    ],
+    "split_protocols_evaluated": [
+      "session_scenario_disjoint"
+    ],
+    "total_metric_rows": 16,
+    "latency_benchmarks_enabled": true,
+    "latency_benchmarks_evaluated": 16,
+    "duration_seconds": 2989.33
+  },
+  "timestamp_utc": "2026-10-17T10:39:40Z"
+}

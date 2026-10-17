@@ -50,7 +50,9 @@ from doh_reproduction.comparison import (  # noqa: E402
     export_all_tables_to_markdown,
     generate_full_comparison_report,
     load_evidence_json,
+    load_latency_benchmarks,
     load_timeseries_metrics,
+    validate_latency_benchmarks_schema,
 )
 
 
@@ -129,6 +131,7 @@ def generate_report(
     output_dir: Union[str, Path],
     *,
     phase2_metrics_path: Optional[Union[str, Path]] = None,
+    phase2_latency_path: Optional[Union[str, Path]] = None,
     force: bool = False,
     markdown_filename: str = "comparison_report.md",
 ) -> dict[str, Path]:
@@ -139,6 +142,7 @@ def generate_report(
         phase1_l2_path: Path to Phase 1 Layer 2 evidence JSON.
         output_dir: Directory where artifacts are saved.
         phase2_metrics_path: Optional path to Phase 2 metrics.json artifact.
+        phase2_latency_path: Optional path to Phase A operational latency_benchmarks.json artifact.
         force: If True, allow overwriting a non-empty directory.
         markdown_filename: Name of the generated unified Markdown file.
 
@@ -202,6 +206,10 @@ def generate_report(
         flow_random_metrics = ts_metrics
         group_disjoint_metrics = ts_metrics
 
+    # 2.5 Load and validate Phase 2 operational latency benchmarks if provided
+    latency_benchmarks = None
+    if phase2_latency_path is not None:
+        latency_benchmarks = load_latency_benchmarks(phase2_latency_path)
     # 3. Generate all 6 deterministic comparison tables
     tables = generate_full_comparison_report(
         evidence_l1=evidence_l1,
@@ -210,6 +218,7 @@ def generate_report(
         timeseries_l2=timeseries_l2,
         flow_random_metrics=flow_random_metrics,
         group_disjoint_metrics=group_disjoint_metrics,
+        latency_benchmarks=latency_benchmarks,
     )
 
     # 4. Export Markdown and CSV content
@@ -269,6 +278,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional path to Phase 2 time-series metrics.json artifact (from train_timeseries.py)",
     )
     parser.add_argument(
+        "--phase2-latency",
+        "--latency-benchmarks",
+        "--latency-json",
+        dest="phase2_latency",
+        default=None,
+        type=Path,
+        help="Optional path to Phase A operational latency_benchmarks.json artifact",
+    )
+    parser.add_argument(
         "--output-dir",
         "-o",
         dest="output_dir",
@@ -314,6 +332,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             phase1_l2_path=args.phase1_l2,
             output_dir=args.output_dir,
             phase2_metrics_path=args.phase2_metrics,
+            phase2_latency_path=args.phase2_latency,
             force=args.force,
             markdown_filename=args.markdown_filename,
         )

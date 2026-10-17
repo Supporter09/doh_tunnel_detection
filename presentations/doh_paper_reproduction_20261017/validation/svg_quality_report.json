@@ -4,7 +4,7 @@
   "target": "/Users/charlie/Desktop/HUST/MalwareAnalysis/doh_tunnel_detection/presentations/doh_paper_reproduction_20261017",
   "source_fingerprint": {
     "algorithm": "sha256",
-    "digest": "e75f6d4ad4e29367d024d8203a94abd30d5065328665c9b68d19eb4fe59b7287",
+    "digest": "b956e5235be08982be852442af0e44a9a3daa9bb177c1f4fa22a7f7dc3da13a1",
     "file_count": 15,
     "files": [
       {
@@ -61,7 +61,7 @@
       },
       {
         "file": "14_limitations.svg",
-        "sha256": "83358d251153af321ec182638b6166938cbcc21c3bf617d86c6e182f7cc0ca6a"
+        "sha256": "54d8d5561bdac2c9b8474ff5374ad8c840f7371e5ecf5473fd75524af0030f1e"
       },
       {
         "file": "15_conclusion.svg",
@@ -222,7 +222,7 @@
         },
         {
           "file": "14_limitations.svg",
-          "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[31]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (9 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): phase-b-scale:font-weight None -> 'bold'; text[23]:font-weight 'bold' -> None; g[24]:font-weight 'bold' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
         },
         {
           "file": "14_limitations.svg",
@@ -264,6 +264,9 @@
   },
   "drift": {
     "colors": {
+      "#9A4D00": [
+        "14_limitations.svg"
+      ],
       "#C9EAF0": [
         "03_two_layer_system.svg",
         "04_packet_clumps.svg",
@@ -277,10 +280,14 @@
         "03_two_layer_system.svg",
         "15_conclusion.svg"
       ],
+      "#E0F2FE": [
+        "14_limitations.svg"
+      ],
       "#FFF7ED": [
         "01_cover.svg",
         "06_original_pipeline.svg",
-        "10_leakage_gap.svg"
+        "10_leakage_gap.svg",
+        "14_limitations.svg"
       ]
     },
     "fonts": {
@@ -329,10 +336,10 @@
     "scope": "informational-not-a-quota",
     "pages": 15,
     "totals": {
-      "text_elements": 305,
+      "text_elements": 309,
       "image_placements": 2,
       "icons": 11,
-      "svg_geometry_elements": 165,
+      "svg_geometry_elements": 169,
       "preset_shapes": 0,
       "page_frame_elements": 30,
       "marker_uses": 8,
@@ -361,7 +368,7 @@
       "path": 0,
       "polygon": 0,
       "polyline": 2,
-      "rect": 95
+      "rect": 99
     },
     "preset_names": {},
     "native_objects": {
@@ -1329,13 +1336,13 @@
       "exists": true,
       "errors": [],
       "warnings": [
-        "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[31]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)",
+        "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (9 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): phase-b-scale:font-weight None -> 'bold'; text[23]:font-weight 'bold' -> None; g[24]:font-weight 'bold' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)",
         "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
       ],
       "info": {
         "viewbox": "0 0 1280 720",
         "carrier_receipt": {
-          "text_elements": 21,
+          "text_elements": 25,
           "images": {
             "placements": 0,
             "files": [],
@@ -1350,7 +1357,7 @@
           },
           "geometry": {
             "svg_elements": {
-              "rect": 6,
+              "rect": 10,
               "circle": 0,
               "ellipse": 0,
               "line": 0,
@@ -1380,9 +1387,14 @@
           "Aptos, Arial",
           "Consolas"
         ],
-        "text_elements": 21,
+        "text_elements": 25,
         "tspan_elements": 0,
         "contextual_values": {
+          "colors": [
+            "#9A4D00",
+            "#E0F2FE",
+            "#FFF7ED"
+          ],
           "font_families": [
             "Aptos Display",
             "Consolas"
@@ -1390,7 +1402,7 @@
         }
       },
       "passed": true,
-      "source_sha256": "83358d251153af321ec182638b6166938cbcc21c3bf617d86c6e182f7cc0ca6a"
+      "source_sha256": "54d8d5561bdac2c9b8474ff5374ad8c840f7371e5ecf5473fd75524af0030f1e"
     },
     {
       "file": "15_conclusion.svg",

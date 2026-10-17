@@ -49,7 +49,9 @@ from doh_reproduction.comparison import (
     get_paper_table_v,
     get_paper_table_vi,
     load_evidence_json,
+    load_latency_benchmarks,
     load_timeseries_metrics,
+    validate_latency_benchmarks_schema,
     validate_phase1_evidence_schema,
     validate_timeseries_metrics_schema,
 )
@@ -438,6 +440,358 @@ class TestManifestIntegration(unittest.TestCase):
             for t_id, csv_content in csv_map.items():
                 self.assertTrue(len(csv_content) > 50, f"CSV for {t_id} is unexpectedly empty.")
 
+def _make_valid_latency_benchmark(
+    task: str = "l1",
+    model: str = "paper_v4",
+    window_size: int = 6,
+    split_protocol: str = "session_scenario_disjoint",
+    sample_count: int = 500,
+    device: str = "cpu",
+    device_name: str = "Apple M3 Max",
+    col_mean: float = 0.523,
+    prep_mean_ms: float = 0.042,
+    infer_mean_ms: float = 1.120,
+    e2e_mean: float = 0.524,
+) -> dict[str, Any]:
+    return {
+        "task": task,
+        "model": model,
+        "window_size": window_size,
+        "split_protocol": split_protocol,
+        "device": device,
+        "device_name": device_name,
+        "sample_count": sample_count,
+        "batch_size": 1,
+        "warmup_iterations": 10,
+        "claim_boundary": "Phase A operational latency microbenchmarks measured on first-window-per-test-flow samples with batch size 1.",
+        "traffic_collection_delay": {
+            "count": sample_count,
+            "mean_seconds": col_mean,
+            "median_seconds": col_mean * 0.1,
+            "p50_seconds": col_mean * 0.1,
+            "p95_seconds": col_mean * 0.9,
+            "p99_seconds": col_mean * 1.0,
+            "min_seconds": 0.001,
+            "max_seconds": col_mean * 1.5,
+            "std_seconds": 0.05,
+            "mean_ms": col_mean * 1000.0,
+            "median_ms": col_mean * 100.0,
+            "p50_ms": col_mean * 100.0,
+            "p95_ms": col_mean * 900.0,
+            "p99_ms": col_mean * 1000.0,
+            "min_ms": 1.0,
+            "max_ms": col_mean * 1500.0,
+            "std_ms": 50.0,
+        },
+        "preprocessing_latency": {
+            "count": sample_count,
+            "mean_seconds": prep_mean_ms / 1000.0,
+            "median_seconds": (prep_mean_ms * 0.9) / 1000.0,
+            "p50_seconds": (prep_mean_ms * 0.9) / 1000.0,
+            "p95_seconds": (prep_mean_ms * 1.1) / 1000.0,
+            "p99_seconds": (prep_mean_ms * 1.2) / 1000.0,
+            "min_seconds": 0.00001,
+            "max_seconds": 0.0001,
+            "std_seconds": 0.00001,
+            "mean_ms": prep_mean_ms,
+            "median_ms": prep_mean_ms * 0.9,
+            "p50_ms": prep_mean_ms * 0.9,
+            "p95_ms": prep_mean_ms * 1.1,
+            "p99_ms": prep_mean_ms * 1.2,
+            "min_ms": 0.01,
+            "max_ms": 0.1,
+            "std_ms": 0.01,
+        },
+        "inference_latency": {
+            "count": sample_count,
+            "mean_seconds": infer_mean_ms / 1000.0,
+            "median_seconds": (infer_mean_ms * 0.95) / 1000.0,
+            "p50_seconds": (infer_mean_ms * 0.95) / 1000.0,
+            "p95_seconds": (infer_mean_ms * 1.1) / 1000.0,
+            "p99_seconds": (infer_mean_ms * 1.2) / 1000.0,
+            "min_seconds": 0.0005,
+            "max_seconds": 0.002,
+            "std_seconds": 0.0001,
+            "mean_ms": infer_mean_ms,
+            "median_ms": infer_mean_ms * 0.95,
+            "p50_ms": infer_mean_ms * 0.95,
+            "p95_ms": infer_mean_ms * 1.1,
+            "p99_ms": infer_mean_ms * 1.2,
+            "min_ms": 0.5,
+            "max_ms": 2.0,
+            "std_ms": 0.1,
+            "throughput_samples_per_second": 1000.0 / infer_mean_ms,
+        },
+        "end_to_end_latency": {
+            "count": sample_count,
+            "mean_seconds": e2e_mean,
+            "median_seconds": e2e_mean * 0.1,
+            "p50_seconds": e2e_mean * 0.1,
+            "p95_seconds": e2e_mean * 0.9,
+            "p99_seconds": e2e_mean * 1.0,
+            "min_seconds": 0.002,
+            "max_seconds": e2e_mean * 1.5,
+            "std_seconds": 0.05,
+            "mean_ms": e2e_mean * 1000.0,
+            "median_ms": e2e_mean * 100.0,
+            "p50_ms": e2e_mean * 100.0,
+            "p95_ms": e2e_mean * 900.0,
+            "p99_ms": e2e_mean * 1000.0,
+            "min_ms": 2.0,
+            "max_ms": e2e_mean * 1500.0,
+            "std_ms": 50.0,
+        },
+    }
+
+
+def _make_valid_latency_payload(benchmarks: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "manifest_version": "1.0.0",
+        "generated_at_utc": "2026-10-17T09:00:00Z",
+        "claim_boundary": "Phase A operational latency microbenchmarks measured on first-window-per-test-flow samples.",
+        "total_benchmarks": len(benchmarks),
+        "benchmarks": benchmarks,
+    }
+
+
+class TestLatencyBenchmarksSchemaValidation(unittest.TestCase):
+    """Verify strict validation and rejection of operational latency benchmark payloads."""
+
+    def test_valid_schema_passes(self) -> None:
+        payload = _make_valid_latency_payload([
+            _make_valid_latency_benchmark(task="l1", model="paper_v4", window_size=6),
+            _make_valid_latency_benchmark(task="l2", model="improved_bidi_gru", window_size=3),
+        ])
+        validate_latency_benchmarks_schema(payload)
+
+    def test_rejects_missing_top_level_keys(self) -> None:
+        for missing_key in ("manifest_version", "generated_at_utc", "claim_boundary", "total_benchmarks", "benchmarks"):
+            payload = _make_valid_latency_payload([_make_valid_latency_benchmark()])
+            del payload[missing_key]
+            with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+                validate_latency_benchmarks_schema(payload)
+            self.assertIn("Missing required top-level key", str(ctx.exception))
+
+    def test_rejects_count_mismatch(self) -> None:
+        payload = _make_valid_latency_payload([_make_valid_latency_benchmark()])
+        payload["total_benchmarks"] = 5
+        with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+            validate_latency_benchmarks_schema(payload)
+        self.assertIn("does not match length", str(ctx.exception))
+
+    def test_rejects_unrecognized_task(self) -> None:
+        b = _make_valid_latency_benchmark(task="l3")
+        payload = _make_valid_latency_payload([b])
+        with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+            validate_latency_benchmarks_schema(payload)
+        self.assertIn("unrecognized task", str(ctx.exception))
+
+    def test_rejects_unrecognized_model(self) -> None:
+        b = _make_valid_latency_benchmark(model="unknown_transformer")
+        payload = _make_valid_latency_payload([b])
+        with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+            validate_latency_benchmarks_schema(payload)
+        self.assertIn("unrecognized model", str(ctx.exception))
+
+    def test_rejects_unrecognized_split_protocol(self) -> None:
+        b = _make_valid_latency_benchmark(split_protocol="arbitrary_split")
+        payload = _make_valid_latency_payload([b])
+        with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+            validate_latency_benchmarks_schema(payload)
+        self.assertIn("unrecognized split_protocol", str(ctx.exception))
+
+    def test_rejects_non_positive_sample_count(self) -> None:
+        for bad_count in (0, -10):
+            b = _make_valid_latency_benchmark(sample_count=bad_count)
+            payload = _make_valid_latency_payload([b])
+            with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+                validate_latency_benchmarks_schema(payload)
+            self.assertIn("sample_count", str(ctx.exception))
+
+    def test_rejects_batch_size_not_one(self) -> None:
+        for bad_bs in (2, 0, 32):
+            b = _make_valid_latency_benchmark()
+            b["batch_size"] = bad_bs
+            payload = _make_valid_latency_payload([b])
+            with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+                validate_latency_benchmarks_schema(payload)
+            self.assertIn("batch_size must be 1", str(ctx.exception))
+
+    def test_rejects_missing_or_empty_claim_boundary(self) -> None:
+        payload = _make_valid_latency_payload([_make_valid_latency_benchmark()])
+        payload["claim_boundary"] = "   "
+        with self.assertRaises(IncompatibleMetricSchemaError):
+            validate_latency_benchmarks_schema(payload)
+
+        b = _make_valid_latency_benchmark()
+        b["claim_boundary"] = ""
+        payload = _make_valid_latency_payload([b])
+        with self.assertRaises(IncompatibleMetricSchemaError):
+            validate_latency_benchmarks_schema(payload)
+
+    def test_rejects_negative_or_infinite_metrics(self) -> None:
+        b = _make_valid_latency_benchmark()
+        b["traffic_collection_delay"]["mean_seconds"] = -0.5
+        with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+            validate_latency_benchmarks_schema(_make_valid_latency_payload([b]))
+        self.assertIn("must be non-negative and finite", str(ctx.exception))
+
+        b = _make_valid_latency_benchmark()
+        b["inference_latency"]["mean_ms"] = float("inf")
+        with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+            validate_latency_benchmarks_schema(_make_valid_latency_payload([b]))
+        self.assertIn("must be non-negative and finite", str(ctx.exception))
+
+    def test_rejects_percentile_monotonicity_violation(self) -> None:
+        b = _make_valid_latency_benchmark()
+        b["inference_latency"]["p50_ms"] = 5.0
+        b["inference_latency"]["p95_ms"] = 2.0  # p50 > p95!
+        with self.assertRaises(IncompatibleMetricSchemaError) as ctx:
+            validate_latency_benchmarks_schema(_make_valid_latency_payload([b]))
+        self.assertIn("violates percentile monotonicity", str(ctx.exception))
+
+
+class TestLatencyTradeoffGeneration(unittest.TestCase):
+    """Verify Table 5 generation with and without operational latency evidence."""
+
+    def test_omission_compatibility_preserves_seven_paper_rows(self) -> None:
+        """When latency_benchmarks is None, table contains exactly 7 paper rows."""
+        table = generate_latency_tradeoff_table(latency_benchmarks=None)
+        self.assertEqual(len(table.rows), 7)
+        # Check first row is paper baseline
+        self.assertEqual(table.rows[0][0], LayerTask.L1.display_name)
+        self.assertIn("Paper RF", table.rows[0][1])
+        # Check no project-observed rows present
+        for r in table.rows:
+            self.assertNotIn("[Project-Observed]", r[1])
+
+    def test_empty_benchmarks_omission_compatibility(self) -> None:
+        """When benchmarks is empty list, table remains 7 paper rows."""
+        payload = _make_valid_latency_payload([])
+        table = generate_latency_tradeoff_table(latency_benchmarks=payload)
+        self.assertEqual(len(table.rows), 7)
+
+    def test_project_observed_rows_appended_for_session_disjoint(self) -> None:
+        """Session-disjoint benchmarks append deterministic [Project-Observed] component rows."""
+        b1 = _make_valid_latency_benchmark(
+            task="l1",
+            model="paper_v4",
+            window_size=6,
+            split_protocol="session_scenario_disjoint",
+            sample_count=500,
+            device="cpu",
+            device_name="Apple M3 Max",
+        )
+        payload = _make_valid_latency_payload([b1])
+        table = generate_latency_tradeoff_table(latency_benchmarks=payload)
+
+        # 7 paper rows + 4 component rows = 11 rows
+        self.assertEqual(len(table.rows), 11)
+
+        # Verify paper rows remain intact in positions 0..6
+        self.assertIn("Paper RF", table.rows[0][1])
+
+        # Verify project rows in positions 7..10
+        project_rows = table.rows[7:]
+        self.assertEqual(len(project_rows), 4)
+
+        expected_components = [
+            "Traffic Collection Delay",
+            "Sequence Preprocessing",
+            "Model Inference",
+            "End-to-End Latency",
+        ]
+        for idx, (row, comp_title) in enumerate(zip(project_rows, expected_components)):
+            self.assertEqual(row[0], LayerTask.L1.display_name)
+            # Provenance badge
+            self.assertIn("[Project-Observed]", row[1])
+            # Model name
+            self.assertIn("Packet Clump LSTM", row[1])
+            # Component name
+            self.assertIn(comp_title, row[1])
+            # Hardware/device
+            self.assertIn("Apple M3 Max", row[1])
+            # Window / Horizon with sample count
+            self.assertIn("First 6 clumps", row[2])
+            self.assertIn("n=500", row[2])
+
+    def test_flow_random_benchmarks_filtered_out(self) -> None:
+        """Benchmarks using paper_flow_random are excluded to prevent cross-session leakage rows."""
+        b_rand = _make_valid_latency_benchmark(
+            task="l1",
+            model="paper_v4",
+            window_size=6,
+            split_protocol="paper_flow_random",
+        )
+        b_disj = _make_valid_latency_benchmark(
+            task="l1",
+            model="paper_v4",
+            window_size=6,
+            split_protocol="session_scenario_disjoint",
+        )
+        payload = _make_valid_latency_payload([b_rand, b_disj])
+        table = generate_latency_tradeoff_table(latency_benchmarks=payload)
+
+        # Only b_disj appended: 7 + 4 = 11 rows (b_rand skipped)
+        self.assertEqual(len(table.rows), 11)
+
+    def test_deterministic_ordering_layer_window_component(self) -> None:
+        """Rows are strictly ordered: Layer 1 before Layer 2, window sizes ascending, components in pipeline order."""
+        # Provide out-of-order benchmarks (L2 window 6, L1 window 6, L1 window 1)
+        b_l2_w6 = _make_valid_latency_benchmark(task="l2", model="paper_v4", window_size=6)
+        b_l1_w6 = _make_valid_latency_benchmark(task="l1", model="paper_v4", window_size=6)
+        b_l1_w1 = _make_valid_latency_benchmark(task="l1", model="paper_v4", window_size=1)
+
+        payload = _make_valid_latency_payload([b_l2_w6, b_l1_w6, b_l1_w1])
+        table = generate_latency_tradeoff_table(latency_benchmarks=payload)
+
+        # 7 paper + 3 * 4 = 19 rows
+        self.assertEqual(len(table.rows), 19)
+
+        # First 8 project rows must be Layer 1 (window 1, then window 6)
+        p_rows = table.rows[7:]
+        # Check window 1 comes first
+        self.assertIn("First 1 clumps", p_rows[0][2])
+        self.assertIn("Layer 1", p_rows[0][0])
+        # Then window 6 Layer 1
+        self.assertIn("First 6 clumps", p_rows[4][2])
+        self.assertIn("Layer 1", p_rows[4][0])
+        # Then window 6 Layer 2
+        self.assertIn("First 6 clumps", p_rows[8][2])
+        self.assertIn("Layer 2", p_rows[8][0])
+
+    def test_units_not_mixed_and_inference_isolated(self) -> None:
+        """Physical collection and end-to-end use 's'; preprocessing and inference use 'ms'."""
+        b = _make_valid_latency_benchmark(
+            task="l1",
+            model="paper_v4",
+            window_size=6,
+            col_mean=0.523,
+            prep_mean_ms=0.042,
+            infer_mean_ms=1.120,
+            e2e_mean=0.524,
+        )
+        payload = _make_valid_latency_payload([b])
+        table = generate_latency_tradeoff_table(latency_benchmarks=payload)
+
+        p_rows = table.rows[7:]
+        col_row = p_rows[0]
+        prep_row = p_rows[1]
+        infer_row = p_rows[2]
+        e2e_row = p_rows[3]
+
+        # Collection in seconds
+        self.assertTrue(col_row[4].endswith(" s"), f"Expected ' s' in {col_row[4]}")
+        # Preprocessing in ms
+        self.assertTrue(prep_row[4].endswith(" ms"), f"Expected ' ms' in {prep_row[4]}")
+        # Inference in ms
+        self.assertTrue(infer_row[4].endswith(" ms"), f"Expected ' ms' in {infer_row[4]}")
+        # End-to-End in seconds
+        self.assertTrue(e2e_row[4].endswith(" s"), f"Expected ' s' in {e2e_row[4]}")
+
+        # Latency reduction on inference is N/A (sub-component) to avoid pretending inference = detection delay
+        self.assertEqual(infer_row[6], "N/A (sub-component)")
+        self.assertIn("does NOT equal detection delay", infer_row[7])
 
 if __name__ == "__main__":
     unittest.main()

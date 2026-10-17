@@ -217,6 +217,14 @@ except ImportError:
     confusion_matrix_counts = None  # type: ignore[assignment]
     binary_metrics = None  # type: ignore[assignment]
 
+try:
+    from doh_reproduction.operational_latency import (
+        benchmark_operational_latency,
+        emit_latency_benchmark_artifacts,
+    )
+except ImportError:
+    benchmark_operational_latency = None  # type: ignore[assignment]
+    emit_latency_benchmark_artifacts = None  # type: ignore[assignment]
 
 # ---------------------------------------------------------------------------
 # Pure Configuration Validation Helpers
@@ -281,6 +289,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "learning_rate": 0.001,
     "patience": 5,
     "enable_score_calibration": True,
+    "enable_latency_benchmark": False,
+    "latency_warmup_iterations": 10,
+    "latency_max_samples": 500,
     "description": "Safe default audit configuration for raw-PCAP packet-clump sequence classification.",
 }
 
@@ -446,6 +457,28 @@ def validate_run_config(config: Dict[str, Any]) -> Dict[str, Any]:
 
     cfg["enable_score_calibration"] = bool(cfg.get("enable_score_calibration", True))
     cfg["description"] = str(cfg.get("description", DEFAULT_CONFIG["description"]))
+    # 14. Operational Latency Benchmarking controls
+    enable_latency = cfg.get("enable_latency_benchmark", DEFAULT_CONFIG["enable_latency_benchmark"])
+    if not isinstance(enable_latency, bool):
+        raise ValueError(
+            f"Invalid 'enable_latency_benchmark': {enable_latency!r}. Must be a boolean."
+        )
+    cfg["enable_latency_benchmark"] = enable_latency
+
+    latency_warmup = cfg.get("latency_warmup_iterations", DEFAULT_CONFIG["latency_warmup_iterations"])
+    if not isinstance(latency_warmup, int) or latency_warmup < 0:
+        raise ValueError(
+            f"Invalid 'latency_warmup_iterations': {latency_warmup!r}. Must be an integer >= 0."
+        )
+    cfg["latency_warmup_iterations"] = int(latency_warmup)
+
+    latency_max_samples = cfg.get("latency_max_samples", DEFAULT_CONFIG["latency_max_samples"])
+    if latency_max_samples is not None:
+        if not isinstance(latency_max_samples, int) or latency_max_samples <= 0:
+            raise ValueError(
+                f"Invalid 'latency_max_samples': {latency_max_samples!r}. Must be None or an integer >= 1."
+            )
+    cfg["latency_max_samples"] = latency_max_samples
 
     return cfg
 
@@ -1279,6 +1312,7 @@ def run_timeseries_pipeline(
 
     all_metric_rows: List[Dict[str, Any]] = []
     all_training_history_rows: List[Dict[str, Any]] = []
+    all_latency_benchmark_rows: List[Any] = []
 
     device = "cuda" if (torch is not None and torch.cuda.is_available()) else "cpu"
 
@@ -1586,6 +1620,29 @@ def run_timeseries_pipeline(
                         "leakage_caveat": leakage_caveat_text,
                     }
                     all_metric_rows.append(metric_row)
+                    # 5.5 Operational Latency Benchmarking (Phase A)
+                    if config.get("enable_latency_benchmark", False):
+                        if benchmark_operational_latency is not None and model is not None:
+                            logger.info(
+                                "... Benchmarking operational latency for model: %s (Window: %d, Task: %s, Split: %s) ...",
+                                model_name,
+                                w_size,
+                                task_name,
+                                split_proto,
+                            )
+                            bench_res = benchmark_operational_latency(
+                                model=model,
+                                test_samples=split_res.test,
+                                flows=candidate_flows,
+                                task=task_name,
+                                model_name=model_name,
+                                window_size=w_size,
+                                split_protocol=split_proto,
+                                device=device,
+                                warmup_iterations=config.get("latency_warmup_iterations", 10),
+                                max_samples=config.get("latency_max_samples", 500),
+                            )
+                            all_latency_benchmark_rows.append(bench_res)
 
     # 6. Emit Metrics Artifact (metrics.json) compliant with validate_timeseries_metrics_schema
     metrics_payload: Dict[str, Any] = {
@@ -1610,6 +1667,11 @@ def run_timeseries_pipeline(
             fieldnames=["task", "model", "window_size", "split_protocol", "epoch", "train_loss", "val_loss"],
             rows=all_training_history_rows,
         )
+    # 7.5 Emit Dedicated Latency Benchmark Artifacts (Phase A)
+    if config.get("enable_latency_benchmark", False):
+        if emit_latency_benchmark_artifacts is not None:
+            emit_latency_benchmark_artifacts(output_dir, all_latency_benchmark_rows)
+
 
     # 8. Emit Experiment Manifest (experiment_manifest.json)
     duration_sec = time.time() - start_time
@@ -1682,6 +1744,13 @@ def run_timeseries_pipeline(
                 "mask-aware Bidirectional GRU model with attention pooling; class-weighted BCE loss; validation-only Platt probability calibration "
                 "and decision threshold selection under strict target FPR constraint (FPR <= 0.001). Never tunes threshold on test data."
             ),
+            "operational_latency": (
+                "Phase A operational latency microbenchmarks measured on first-window-per-test-flow samples with "
+                "batch size 1, warm-up iterations, and CUDA synchronization. Evaluates traffic collection delay "
+                "(physical clump network observation time), sequence preprocessing, and PyTorch model forward pass. "
+                "Traffic collection delay is derived from clump timestamps/durations; preprocessing and inference are "
+                "timed in-memory without disk I/O."
+            ),
         },
         "execution_summary": {
             "tasks_evaluated": sorted({str(row["task"]) for row in all_metric_rows}),
@@ -1689,6 +1758,8 @@ def run_timeseries_pipeline(
             "window_sizes_evaluated": sorted({int(row["window_size"]) for row in all_metric_rows}),
             "split_protocols_evaluated": sorted({str(row["split_protocol"]) for row in all_metric_rows}),
             "total_metric_rows": len(all_metric_rows),
+            "latency_benchmarks_enabled": bool(config.get("enable_latency_benchmark", False)),
+            "latency_benchmarks_evaluated": len(all_latency_benchmark_rows),
             "duration_seconds": round(duration_sec, 2),
         },
         "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -1774,6 +1845,24 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         default=None,
         help="Override maximum flows to extract per class.",
     )
+    parser.add_argument(
+        "--enable-latency-benchmark",
+        action="store_true",
+        default=None,
+        help="Enable Phase A operational latency microbenchmarking on first-window test samples.",
+    )
+    parser.add_argument(
+        "--latency-max-samples",
+        type=int,
+        default=None,
+        help="Maximum first-window test flow samples to evaluate in latency microbenchmark.",
+    )
+    parser.add_argument(
+        "--latency-warmup-iterations",
+        type=int,
+        default=None,
+        help="Number of batch-1 warmup forward passes before latency measurement.",
+    )
     return parser.parse_args(argv)
 
 
@@ -1801,6 +1890,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         resolved_cfg["max_capture_members"] = args.max_captures
     if args.max_flows is not None:
         resolved_cfg["max_flows_per_class"] = args.max_flows
+    if args.enable_latency_benchmark is not None:
+        resolved_cfg["enable_latency_benchmark"] = args.enable_latency_benchmark
+    if args.latency_max_samples is not None:
+        resolved_cfg["latency_max_samples"] = args.latency_max_samples
+    if args.latency_warmup_iterations is not None:
+        resolved_cfg["latency_warmup_iterations"] = args.latency_warmup_iterations
 
     # Re-validate after overrides
     final_cfg = validate_run_config(resolved_cfg)

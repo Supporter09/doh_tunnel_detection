@@ -277,14 +277,14 @@
 - **Visualization**: `best-corrected-f1` grouped bars for Paper v4 versus BiGRU by layer.
 - **Native-ready**: best-corrected-f1=yes
 
-#### Slide 14 - The Improvement Is Real Within a Narrow Evidence Boundary
+#### Slide 14 - Phase A Latency Evidence and Phase B Scale Plan
 
-- **Audience move**: From celebrating gains → adopting the correct limitations and next validation steps.
-- **Relationships**: Successful findings are contrasted with unresolved external-validity risks; each risk maps to a concrete next experiment.
-- **Composition**: A balanced claim-versus-boundary ledger ending in prioritized next work.
-- **Title**: Strong internal evidence does not yet prove operational generalization
-- **Core message**: Report the improvement, but preserve the capped-run, finite-test, and single-seed caveats.
-- **Content**: verified: zero-overlap split implementation / 80 completed configurations / BiGRU gains on both layers · bounded: benign quota 325<500 / capped windows and flows / one seed / no external corpus · next: uncapped multi-seed rerun / tool-family holdout / confidence intervals / operational traffic validation.
+- **Audience move**: From model-quality gains → understanding operational delay and the evidence-expansion plan.
+- **Relationships**: End-to-end delay decomposes into traffic collection, preprocessing, and inference; selected-window L1/L2 results lead into a gated Windows CUDA scale ladder.
+- **Composition**: Two latency KPI cards above a long-tail warning strip and a five-stage scale sequence.
+- **Title**: Traffic collection dominates detection time
+- **Core message**: Sub-millisecond model inference does not remove traffic-observation delay; scale tests must preserve session-disjoint evaluation.
+- **Content**: L1 BiGRU ℓ=7 F1 0.9651 / p50 end-to-end 0.871 s / inference p50 0.132 ms / n=25 · L2 BiGRU ℓ=10 F1 0.9864 / p50 end-to-end 3.513 s / inference p50 0.168 ms / n=22 · p95 end-to-end approximately 30.055 s for both selected windows · Phase B stages cap 25→50→100→250→optional uncapped on Windows CUDA with split, RAM, metric, and latency gates.
 
 #### Slide 15 - Reproduction Became a Better Scientific Test
 

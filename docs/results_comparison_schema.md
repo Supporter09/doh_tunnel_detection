@@ -241,6 +241,15 @@ Provides the quantitative justification for packet-clump sequence classification
 | **L2 Clump LSTM ($\ell=3$, Optimal)** | **0.991** | **0.502 s** | **0.050 s** | **99.1% reduction** | **Optimal sweet spot: matches RF in ~0.5s mean delay** |
 | **L2 Clump LSTM ($\ell=6$)** | 0.998 | 1.063 s | 0.203 s | **98.0% reduction** | Near-perfect tunnel identification (0.998 F1) in ~1s |
 
+
+#### Operational Latency Extension (`latency_benchmarks.json` Integration):
+When Phase A operational latency evidence is provided via `--phase2-latency`, Table 5 deterministically appends `[Project-Observed]` rows for corrected `session_scenario_disjoint` evaluations. Each evaluated benchmark reports explicit component breakdown without mixing units:
+1. **Traffic Collection Delay**: Physical network clump observation time ($T_{\text{collect}} = \sum (\text{duration} + \text{interarrival})$) in seconds (`s`).
+2. **Sequence Preprocessing**: In-memory vectorization, DoHLyzer logarithmic normalization, post-padding, and tensor assembly in milliseconds (`ms`).
+3. **Model Inference**: PyTorch batch size 1 model forward pass in milliseconds (`ms`). Explicitly noted as a sub-component that does **not** equal total detection delay.
+4. **End-to-End Latency**: Aligned per-sample sum ($T_{\text{e2e}} = T_{\text{collect}} + T_{\text{prep}} + T_{\text{infer}}$) in seconds (`s`).
+
+Every row explicitly identifies the **model**, **component**, **hardware/device** (e.g. `Apple M3 Max`, `NVIDIA T4`, `CPU`), **window size**, and evaluated **sample count** (`n=500`). When `--phase2-latency` is omitted, existing paper-reported rows remain byte-identical.
 ---
 
 ### Table 6: Methodological, Algorithmic, and Operational Improvements
@@ -391,6 +400,80 @@ The canonical time-series runner (`experiments/kaggle/timeseries_clump_lstm/trai
 ```
 *(Note: In audit mode, `execution_mode` is `"audit"`, `status` is `"not_trained"`, and `runs` is `[]`, guaranteeing zero fabricated numbers).*
 
+
+### 5.3 Phase A Operational Latency Schema (`latency_benchmarks.json`)
+
+The canonical latency microbenchmarking runner (`src/doh_reproduction/operational_latency.py` / `train_timeseries.py`) emits dedicated `latency_benchmarks.json` artifacts evaluated strictly on first-window-per-test-flow samples with batch size 1 and warm-up passes:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OperationalLatencyBenchmarksPayload",
+  "type": "object",
+  "required": ["manifest_version", "generated_at_utc", "claim_boundary", "total_benchmarks", "benchmarks"],
+  "properties": {
+    "manifest_version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+    "generated_at_utc": { "type": "string" },
+    "claim_boundary": { "type": "string", "minLength": 1 },
+    "total_benchmarks": { "type": "integer", "minimum": 0 },
+    "benchmarks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "task", "model", "window_size", "split_protocol", "device",
+          "sample_count", "batch_size", "claim_boundary",
+          "traffic_collection_delay", "preprocessing_latency",
+          "inference_latency", "end_to_end_latency"
+        ],
+        "properties": {
+          "task": { "type": "string", "enum": ["l1", "l2"] },
+          "model": { "type": "string", "enum": ["paper_v4", "improved_bidi_gru"] },
+          "window_size": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "split_protocol": { "type": "string", "enum": ["session_scenario_disjoint", "paper_flow_random", "paper_flow_random_80_20"] },
+          "device": { "type": "string" },
+          "device_name": { "type": "string" },
+          "sample_count": { "type": "integer", "minimum": 1 },
+          "batch_size": { "type": "integer", "const": 1 },
+          "warmup_iterations": { "type": "integer", "minimum": 0 },
+          "claim_boundary": { "type": "string", "minLength": 1 },
+          "traffic_collection_delay": { "$ref": "#/definitions/DistributionSummary" },
+          "preprocessing_latency": { "$ref": "#/definitions/DistributionSummary" },
+          "inference_latency": { "$ref": "#/definitions/DistributionSummary" },
+          "end_to_end_latency": { "$ref": "#/definitions/DistributionSummary" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "DistributionSummary": {
+      "type": "object",
+      "required": ["count", "mean_seconds", "median_seconds", "p50_seconds", "p95_seconds", "p99_seconds"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "mean_seconds": { "type": "number", "minimum": 0.0 },
+        "median_seconds": { "type": "number", "minimum": 0.0 },
+        "p50_seconds": { "type": "number", "minimum": 0.0 },
+        "p95_seconds": { "type": "number", "minimum": 0.0 },
+        "p99_seconds": { "type": "number", "minimum": 0.0 },
+        "mean_ms": { "type": "number", "minimum": 0.0 },
+        "median_ms": { "type": "number", "minimum": 0.0 },
+        "p50_ms": { "type": "number", "minimum": 0.0 },
+        "p95_ms": { "type": "number", "minimum": 0.0 },
+        "p99_ms": { "type": "number", "minimum": 0.0 },
+        "throughput_samples_per_second": { "type": "number", "minimum": 0.0 }
+      }
+    }
+  }
+}
+```
+
+#### Invariant Validation Guards:
+1. **Percentile Monotonicity**: Every summary must strictly satisfy $p_{50} \le p_{95} \le p_{99}$.
+2. **Count Consistency**: `total_benchmarks` must strictly match `len(benchmarks)`.
+3. **Non-Negative Finite Metrics**: All duration metrics must be non-negative, finite real numbers (no `NaN` or `inf`).
+4. **Single-Sample Batch Invariant**: `batch_size` must be strictly `1`.
+5. **Claim Boundary Presence**: Explicit disclaimer boundary string must be present both at root and within each benchmark entry.
 ---
 
 ## 6. Python Usage Guide
@@ -399,6 +482,7 @@ The canonical time-series runner (`experiments/kaggle/timeseries_clump_lstm/trai
 from pathlib import Path
 from doh_reproduction.comparison import (
     load_evidence_json,
+    load_latency_benchmarks,
     load_timeseries_metrics,
     generate_full_comparison_report,
     export_all_tables_to_markdown,
@@ -410,18 +494,22 @@ manifest_dir = Path("data/manifests")
 evidence_l1 = load_evidence_json(manifest_dir / "kaggle_phase1_l1_evidence.json")
 evidence_l2 = load_evidence_json(manifest_dir / "kaggle_phase1_l2_evidence.json")
 
-# 2. Optionally load Phase 2 time-series runs (if available)
+# 2. Optionally load Phase 2 time-series runs and operational latency (if available)
 timeseries_l1 = None
 if (manifest_dir / "timeseries_l1_metrics.json").is_file():
     timeseries_l1 = load_timeseries_metrics(manifest_dir / "timeseries_l1_metrics.json")
+
+latency_benchmarks = None
+if (manifest_dir / "latency_benchmarks.json").is_file():
+    latency_benchmarks = load_latency_benchmarks(manifest_dir / "latency_benchmarks.json")
 
 # 3. Generate all 6 deterministic comparison tables
 tables = generate_full_comparison_report(
     evidence_l1=evidence_l1,
     evidence_l2=evidence_l2,
     timeseries_l1=timeseries_l1,
+    latency_benchmarks=latency_benchmarks,
 )
-
 # 4. Export to Markdown and CSV
 markdown_text = export_all_tables_to_markdown(tables)
 csv_files = export_all_tables_to_csv(tables)

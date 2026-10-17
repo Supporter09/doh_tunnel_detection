@@ -35,7 +35,12 @@ for p in [SCRIPTS_DIR, SRC_DIR, REPO_ROOT]:
 
 import generate_report
 from generate_report import build_parser, generate_report, main
-from doh_reproduction.comparison import IncompatibleMetricSchemaError, UNAVAILABLE_STR
+from doh_reproduction.comparison import (
+    IncompatibleMetricSchemaError,
+    UNAVAILABLE_STR,
+    load_latency_benchmarks,
+    validate_latency_benchmarks_schema,
+)
 
 
 class TestReportCLIAbsentPhase2(unittest.TestCase):
@@ -603,6 +608,290 @@ class TestReportCLISubprocessInvocation(unittest.TestCase):
         self.assertTrue((self.out_dir / "latency_tradeoffs.csv").is_file())
         self.assertTrue((self.out_dir / "improvements.csv").is_file())
 
+def _make_cli_latency_benchmark(
+    task: str = "l1",
+    model: str = "paper_v4",
+    window_size: int = 6,
+    split_protocol: str = "session_scenario_disjoint",
+    sample_count: int = 500,
+    device: str = "cpu",
+    device_name: str = "Apple M3 Max",
+    col_mean: float = 0.523,
+    prep_mean_ms: float = 0.042,
+    infer_mean_ms: float = 1.120,
+    e2e_mean: float = 0.524,
+) -> dict[str, Any]:
+    return {
+        "task": task,
+        "model": model,
+        "window_size": window_size,
+        "split_protocol": split_protocol,
+        "device": device,
+        "device_name": device_name,
+        "sample_count": sample_count,
+        "batch_size": 1,
+        "warmup_iterations": 10,
+        "claim_boundary": "Phase A operational latency microbenchmarks measured on first-window-per-test-flow samples with batch size 1.",
+        "traffic_collection_delay": {
+            "count": sample_count,
+            "mean_seconds": col_mean,
+            "median_seconds": col_mean * 0.1,
+            "p50_seconds": col_mean * 0.1,
+            "p95_seconds": col_mean * 0.9,
+            "p99_seconds": col_mean * 1.0,
+            "min_seconds": 0.001,
+            "max_seconds": col_mean * 1.5,
+            "std_seconds": 0.05,
+            "mean_ms": col_mean * 1000.0,
+            "median_ms": col_mean * 100.0,
+            "p50_ms": col_mean * 100.0,
+            "p95_ms": col_mean * 900.0,
+            "p99_ms": col_mean * 1000.0,
+            "min_ms": 1.0,
+            "max_ms": col_mean * 1500.0,
+            "std_ms": 50.0,
+        },
+        "preprocessing_latency": {
+            "count": sample_count,
+            "mean_seconds": prep_mean_ms / 1000.0,
+            "median_seconds": (prep_mean_ms * 0.9) / 1000.0,
+            "p50_seconds": (prep_mean_ms * 0.9) / 1000.0,
+            "p95_seconds": (prep_mean_ms * 1.1) / 1000.0,
+            "p99_seconds": (prep_mean_ms * 1.2) / 1000.0,
+            "min_seconds": 0.00001,
+            "max_seconds": 0.0001,
+            "std_seconds": 0.00001,
+            "mean_ms": prep_mean_ms,
+            "median_ms": prep_mean_ms * 0.9,
+            "p50_ms": prep_mean_ms * 0.9,
+            "p95_ms": prep_mean_ms * 1.1,
+            "p99_ms": prep_mean_ms * 1.2,
+            "min_ms": 0.01,
+            "max_ms": 0.1,
+            "std_ms": 0.01,
+        },
+        "inference_latency": {
+            "count": sample_count,
+            "mean_seconds": infer_mean_ms / 1000.0,
+            "median_seconds": (infer_mean_ms * 0.95) / 1000.0,
+            "p50_seconds": (infer_mean_ms * 0.95) / 1000.0,
+            "p95_seconds": (infer_mean_ms * 1.1) / 1000.0,
+            "p99_seconds": (infer_mean_ms * 1.2) / 1000.0,
+            "min_seconds": 0.0005,
+            "max_seconds": 0.002,
+            "std_seconds": 0.0001,
+            "mean_ms": infer_mean_ms,
+            "median_ms": infer_mean_ms * 0.95,
+            "p50_ms": infer_mean_ms * 0.95,
+            "p95_ms": infer_mean_ms * 1.1,
+            "p99_ms": infer_mean_ms * 1.2,
+            "min_ms": 0.5,
+            "max_ms": 2.0,
+            "std_ms": 0.1,
+            "throughput_samples_per_second": 1000.0 / infer_mean_ms,
+        },
+        "end_to_end_latency": {
+            "count": sample_count,
+            "mean_seconds": e2e_mean,
+            "median_seconds": e2e_mean * 0.1,
+            "p50_seconds": e2e_mean * 0.1,
+            "p95_seconds": e2e_mean * 0.9,
+            "p99_seconds": e2e_mean * 1.0,
+            "min_seconds": 0.002,
+            "max_seconds": e2e_mean * 1.5,
+            "std_seconds": 0.05,
+            "mean_ms": e2e_mean * 1000.0,
+            "median_ms": e2e_mean * 100.0,
+            "p50_ms": e2e_mean * 100.0,
+            "p95_ms": e2e_mean * 900.0,
+            "p99_ms": e2e_mean * 1000.0,
+            "min_ms": 2.0,
+            "max_ms": e2e_mean * 1500.0,
+            "std_ms": 50.0,
+        },
+    }
+
+
+def _make_cli_latency_payload(benchmarks: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "manifest_version": "1.0.0",
+        "generated_at_utc": "2026-10-17T09:00:00Z",
+        "claim_boundary": "Phase A operational latency microbenchmarks measured on first-window-per-test-flow samples.",
+        "total_benchmarks": len(benchmarks),
+        "benchmarks": benchmarks,
+    }
+
+
+class TestReportCLIWithPhase2Latency(unittest.TestCase):
+    """Verify report generation with optional --phase2-latency artifact."""
+
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.out_dir = Path(self.temp_dir.name) / "reports"
+        self.l1_evidence = REPO_ROOT / "data" / "manifests" / "kaggle_phase1_l1_evidence.json"
+        self.l2_evidence = REPO_ROOT / "data" / "manifests" / "kaggle_phase1_l2_evidence.json"
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def test_omitted_phase2_latency_matches_baseline(self) -> None:
+        """When phase2_latency_path is omitted, latency_tradeoffs.csv has exactly 8 lines (header + 7 paper rows)."""
+        written = generate_report(
+            phase1_l1_path=self.l1_evidence,
+            phase1_l2_path=self.l2_evidence,
+            output_dir=self.out_dir,
+            phase2_latency_path=None,
+        )
+        csv_text = written["latency_tradeoffs"].read_text(encoding="utf-8")
+        reader = list(csv.reader(io.StringIO(csv_text)))
+        self.assertEqual(len(reader), 8)
+        self.assertEqual(reader[0][0], "Layer")
+        self.assertIn("Paper RF", reader[1][1])
+        for row in reader[1:]:
+            self.assertNotIn("[Project-Observed]", row[1])
+
+    def test_phase2_latency_appends_project_observed_rows(self) -> None:
+        """Providing valid latency_benchmarks.json appends [Project-Observed] component rows."""
+        lat_file = Path(self.temp_dir.name) / "latency_benchmarks.json"
+        benchmarks = [
+            _make_cli_latency_benchmark(
+                task="l1",
+                model="paper_v4",
+                window_size=6,
+                split_protocol="session_scenario_disjoint",
+                sample_count=500,
+                device="cpu",
+                device_name="Apple M3 Max",
+            ),
+            _make_cli_latency_benchmark(
+                task="l2",
+                model="improved_bidi_gru",
+                window_size=3,
+                split_protocol="session_scenario_disjoint",
+                sample_count=450,
+                device="cuda:0",
+                device_name="NVIDIA T4",
+            ),
+        ]
+        payload = _make_cli_latency_payload(benchmarks)
+        lat_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+        written = generate_report(
+            phase1_l1_path=self.l1_evidence,
+            phase1_l2_path=self.l2_evidence,
+            output_dir=self.out_dir,
+            phase2_latency_path=lat_file,
+        )
+
+        csv_text = written["latency_tradeoffs"].read_text(encoding="utf-8")
+        reader = list(csv.reader(io.StringIO(csv_text)))
+        # 1 header + 7 paper + 4 L1 + 4 L2 = 16 rows
+        self.assertEqual(len(reader), 16)
+
+        # First 7 rows are paper
+        for r in reader[1:8]:
+            self.assertNotIn("[Project-Observed]", r[1])
+
+        # Next 8 rows are project-observed
+        project_rows = reader[8:]
+        self.assertEqual(len(project_rows), 8)
+        for r in project_rows:
+            self.assertIn("[Project-Observed]", r[1])
+
+        # Check explicit device / hardware
+        l1_rows = project_rows[:4]
+        for r in l1_rows:
+            self.assertIn("Apple M3 Max", r[1])
+            self.assertIn("First 6 clumps", r[2])
+            self.assertIn("n=500", r[2])
+
+        l2_rows = project_rows[4:]
+        for r in l2_rows:
+            self.assertIn("NVIDIA T4", r[1])
+            self.assertIn("First 3 clumps", r[2])
+            self.assertIn("n=450", r[2])
+
+        # Check Markdown document contains the new rows
+        md_text = written["markdown"].read_text(encoding="utf-8")
+        self.assertIn("Traffic Collection Delay", md_text)
+        self.assertIn("Apple M3 Max", md_text)
+        self.assertIn("NVIDIA T4", md_text)
+
+    def test_subprocess_cli_with_phase2_latency(self) -> None:
+        """CLI invocation via subprocess with --phase2-latency succeeds with exit code 0."""
+        lat_file = Path(self.temp_dir.name) / "latency_benchmarks.json"
+        benchmarks = [
+            _make_cli_latency_benchmark(task="l1", model="paper_v4", window_size=6),
+        ]
+        payload = _make_cli_latency_payload(benchmarks)
+        lat_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+        cmd = [
+            sys.executable,
+            str(SCRIPTS_DIR / "generate_report.py"),
+            "--phase1-l1",
+            str(self.l1_evidence),
+            "--phase1-l2",
+            str(self.l2_evidence),
+            "--phase2-latency",
+            str(lat_file),
+            "--output-dir",
+            str(self.out_dir),
+            "--quiet",
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, f"CLI stderr: {proc.stderr}")
+        self.assertTrue((self.out_dir / "latency_tradeoffs.csv").is_file())
+
+        csv_text = (self.out_dir / "latency_tradeoffs.csv").read_text(encoding="utf-8")
+        reader = list(csv.reader(io.StringIO(csv_text)))
+        self.assertEqual(len(reader), 12)  # 1 header + 7 paper + 4 project
+
+    def test_invalid_phase2_latency_schema_exits_code_2(self) -> None:
+        """Malformed latency benchmarks payload causes CLI to exit with code 2."""
+        bad_lat_file = Path(self.temp_dir.name) / "bad_latency.json"
+        bad_payload = {
+            "manifest_version": "1.0.0",
+            "claim_boundary": "Test boundary",
+            "total_benchmarks": 1,
+            "benchmarks": [{"task": "invalid_task"}],
+        }
+        bad_lat_file.write_text(json.dumps(bad_payload, indent=2), encoding="utf-8")
+
+        cmd = [
+            sys.executable,
+            str(SCRIPTS_DIR / "generate_report.py"),
+            "--phase1-l1",
+            str(self.l1_evidence),
+            "--phase1-l2",
+            str(self.l2_evidence),
+            "--phase2-latency",
+            str(bad_lat_file),
+            "--output-dir",
+            str(self.out_dir),
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("Schema Error", proc.stderr)
+
+    def test_invalid_phase2_latency_raises_programmatic(self) -> None:
+        """Programmatic generate_report raises IncompatibleMetricSchemaError on malformed latency input."""
+        bad_lat_file = Path(self.temp_dir.name) / "bad_latency.json"
+        bad_payload = {
+            "manifest_version": "1.0.0",
+            "claim_boundary": "Test boundary",
+            "total_benchmarks": 99,
+            "benchmarks": [],
+        }
+        bad_lat_file.write_text(json.dumps(bad_payload, indent=2), encoding="utf-8")
+
+        with self.assertRaises(IncompatibleMetricSchemaError):
+            generate_report(
+                phase1_l1_path=self.l1_evidence,
+                phase1_l2_path=self.l2_evidence,
+                output_dir=self.out_dir,
+                phase2_latency_path=bad_lat_file,
+            )
 
 if __name__ == "__main__":
     unittest.main()

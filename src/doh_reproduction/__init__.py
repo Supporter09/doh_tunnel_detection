@@ -7,6 +7,14 @@ from .clumping import (
     clumping,
     segment_clumps,
 )
+from .operational_latency import (
+    OperationalLatencyBenchmarkResult,
+    benchmark_operational_latency,
+    compute_distribution_summary,
+    compute_percentile,
+    compute_window_collection_delay,
+    emit_latency_benchmark_artifacts,
+)
 
 __all__ = [
     "CLUMP_TIMEOUT_SECONDS",
@@ -14,4 +22,10 @@ __all__ = [
     "Clump",
     "clumping",
     "segment_clumps",
+    "OperationalLatencyBenchmarkResult",
+    "benchmark_operational_latency",
+    "compute_distribution_summary",
+    "compute_percentile",
+    "compute_window_collection_delay",
+    "emit_latency_benchmark_artifacts",
 ]

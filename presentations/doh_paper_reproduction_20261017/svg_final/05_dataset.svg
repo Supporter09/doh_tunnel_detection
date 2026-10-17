@@ -19,7 +19,7 @@
     <rect x="700" y="304" width="444" height="58" rx="6" fill="#FFFFFF" /><circle cx="724" cy="333" r="8" fill="#5B6875" /><text x="748" y="341" font-size="23" fill="#172033">Non-DoH HTTPS</text>
     <rect x="700" y="378" width="444" height="58" rx="6" fill="#FFFFFF" /><circle cx="724" cy="407" r="8" fill="#0E7490" /><text x="748" y="415" font-size="23" fill="#172033">Benign DoH</text>
     <rect x="700" y="452" width="444" height="58" rx="6" fill="#FFFFFF" /><circle cx="724" cy="481" r="8" fill="#D97706" /><text x="748" y="489" font-size="23" fill="#172033">Malicious DoH tunnels</text>
-    <text font-size="16" fill="#5B6875" x="700" y="536">CSV supports statistical replication;</text><text font-size="16" fill="#5B6875" x="700" y="558">PCAP enables sequence reconstruction.</text></g>
+    <text fill="#5B6875" font-size="16" x="700" y="536">CSV supports statistical replication;</text><text fill="#5B6875" font-size="16" x="700" y="558">PCAP enables sequence reconstruction.</text></g>
   <g id="data-path" data-pptx-bounds="100 594 1080 50"><text x="100" y="626" font-size="24" font-weight="bold" fill="#172033">Evidence path:</text><text x="258" y="626" font-size="24" fill="#172033">CSV baseline first → raw PCAP session-disjoint experiment.</text></g>
   <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Sources: original paper; project manifests and raw-PCAP experiment audit</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">05</text></g>
 </svg>

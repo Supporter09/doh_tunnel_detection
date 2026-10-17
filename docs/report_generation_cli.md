@@ -27,6 +27,7 @@ python3 scripts/generate_report.py \
   --phase1-l1 PATH \
   --phase1-l2 PATH \
   [--phase2-metrics PATH] \
+  [--phase2-latency PATH] \
   --output-dir PATH \
   [--force] \
   [--markdown-filename FILENAME] \
@@ -40,6 +41,7 @@ python3 scripts/generate_report.py \
 | `--phase1-l1`, `--l1-evidence` | Path | **Yes** | Path to Phase 1 Layer 1 evidence JSON (`task: "l1"`). |
 | `--phase1-l2`, `--l2-evidence` | Path | **Yes** | Path to Phase 1 Layer 2 evidence JSON (`task: "l2"`). |
 | `--phase2-metrics`, `--timeseries-metrics` | Path | No | Optional path to Phase 2 `metrics.json` artifact (from `train_timeseries.py`). |
+| `--phase2-latency`, `--latency-benchmarks` | Path | No | Optional path to Phase A operational `latency_benchmarks.json` artifact (from `operational_latency.py`). |
 | `--output-dir`, `-o` | Path | **Yes** | Destination directory for generated Markdown and CSV tables. |
 | `--force`, `-f` | Flag | No | Allow overwriting an existing non-empty output directory. Default: `False`. |
 | `--markdown-filename` | String | No | Custom name for the unified Markdown report. Default: `comparison_report.md`. |
@@ -92,7 +94,20 @@ python3 scripts/generate_report.py \
   --force
 ```
 
-### Example C: Programmatic Python API
+### Example C: Full Comparison with Operational Latency Evidence
+When `train_timeseries.py` completes with `--enable-latency-benchmark` emitting `latency_benchmarks.json`:
+
+```bash
+python3 scripts/generate_report.py \
+  --phase1-l1 data/manifests/kaggle_phase1_l1_evidence.json \
+  --phase1-l2 data/manifests/kaggle_phase1_l2_evidence.json \
+  --phase2-metrics artifacts/kaggle/metrics.json \
+  --phase2-latency artifacts/kaggle/latency_benchmarks.json \
+  --output-dir reports/full_comparison_with_latency/ \
+  --force
+```
+
+### Example D: Programmatic Python API
 The CLI logic is also directly importable for unit testing or automated pipelines:
 
 ```python
@@ -104,6 +119,7 @@ written_files = generate_report(
     phase1_l2_path=Path("data/manifests/kaggle_phase1_l2_evidence.json"),
     output_dir=Path("reports/comparison/"),
     phase2_metrics_path=Path("artifacts/kaggle/metrics.json"),
+    phase2_latency_path=Path("artifacts/kaggle/latency_benchmarks.json"),
     force=True,
 )
 

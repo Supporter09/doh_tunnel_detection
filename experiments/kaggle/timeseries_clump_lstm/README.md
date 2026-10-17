@@ -34,7 +34,7 @@ This runner enforces a strict, explicit distinction across three scientific para
    * Never initiates live DNS tunnels (`iodine`, `dns2tcp`, `dnscat2`) and never replays traffic to live networks.
 2. **Zero Binary Artifacts or Raw Data in Git:**
    * Raw PCAP files, nested ZIPs, and binary model weights (`.pt`, `.pkl`, `.h5`) are never committed to version control.
-   * All outputs are small, structured JSON/CSV files: `pcap_audit.json`, `metrics.json`, `experiment_manifest.json`, `training_history.csv`, and confusion matrices.
+   * Outputs are small, structured JSON/CSV files: `pcap_audit.json`, `metrics.json`, `experiment_manifest.json`, `training_history.csv`, confusion matrices, and optional `latency_benchmarks.json/.csv`.
 3. **Streaming Ingestion & Bounded Memory:**
    * Discovers PCAPs directly inside nested ZIP archives, spooling nested archive members on-the-fly to bounded temporary files without materializing entire archives in RAM or extracting the corpus to `/kaggle/working`.
    * Enforces symlink containment, zip-bomb validation (uncompressed size, cumulative bytes, and compression ratio), `max_capture_members`, per-flow packet/byte limits, window caps, and class flow quotas to stay within Kaggle resource limits.
@@ -135,3 +135,19 @@ This runner enforces a strict, explicit distinction across three scientific para
 | `learning_rate` | `float` | `0.001` | Adam optimizer learning rate. |
 | `patience` | `int` | `5` | Early stopping patience on validation loss. |
 | `enable_score_calibration` | `bool` | `true` | Enable validation-only Platt calibration. |
+| `enable_latency_benchmark` | `bool` | `false` | Measure first-window operational latency after each trained model evaluation. |
+| `latency_warmup_iterations` | `int` | `10` | Untimed batch-1 forward passes before inference timing. |
+| `latency_max_samples` | `int` or `null` | `500` | Maximum deterministic first-window test flows benchmarked per model/window/split. |
+
+## 5. Operational latency evidence
+
+When `enable_latency_benchmark` is `true`, the runner emits `latency_benchmarks.json` and `latency_benchmarks.csv`. Each row separates:
+
+- traffic collection delay for the first `l` clumps;
+- normalized sequence preprocessing and host-to-device tensor transfer;
+- warmed-up batch-1 model inference with CUDA synchronization;
+- aligned per-sample end-to-end latency.
+
+Disk I/O and live socket capture overhead are outside this microbenchmark. Accuracy metrics remain in `metrics.json`; latency evidence has a dedicated schema and artifact.
+
+For staged Windows GPU runs, see [`docs/windows_rtx2060_scale_training.md`](../../../docs/windows_rtx2060_scale_training.md).

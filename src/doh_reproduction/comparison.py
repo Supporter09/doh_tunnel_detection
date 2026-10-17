@@ -19,6 +19,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import math
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -492,6 +493,263 @@ def load_timeseries_metrics(path_or_dict: Union[str, Path, Mapping[str, Any]]) -
         raise IncompatibleMetricSchemaError(f"Unsupported input type: {type(path_or_dict)}")
 
     validate_timeseries_metrics_schema(data)
+    return data
+
+
+def validate_latency_benchmarks_schema(payload: Mapping[str, Any]) -> None:
+    """Validate that an operational latency benchmark dict complies with schema.
+
+    Strict validation requirements:
+    - Required top-level keys: manifest_version, generated_at_utc, claim_boundary,
+      total_benchmarks, benchmarks.
+    - Count match: total_benchmarks must equal len(benchmarks).
+    - Recognized task ('l1', 'l2'), model ('paper_v4', 'improved_bidi_gru'), and
+      split_protocol ('session_scenario_disjoint', 'paper_flow_random', 'paper_flow_random_80_20').
+    - Positive sample_count (> 0).
+    - Batch size == 1.
+    - Non-negative finite summaries for traffic_collection_delay, preprocessing_latency,
+      inference_latency, and end_to_end_latency.
+    - Percentile monotonicity ordering: p50 <= p95 <= p99.
+    - Claim boundary present and non-empty at both top-level and per-benchmark.
+
+    Raises:
+        IncompatibleMetricSchemaError: if payload violates any schema constraint.
+    """
+    if not isinstance(payload, Mapping):
+        raise IncompatibleMetricSchemaError(
+            f"Expected dict-like payload for latency benchmarks, got {type(payload).__name__}"
+        )
+
+    required_top_keys = (
+        "manifest_version",
+        "generated_at_utc",
+        "claim_boundary",
+        "total_benchmarks",
+        "benchmarks",
+    )
+    for key in required_top_keys:
+        if key not in payload:
+            raise IncompatibleMetricSchemaError(
+                f"Missing required top-level key '{key}' in latency benchmarks payload."
+            )
+
+    version = payload.get("manifest_version")
+    if not isinstance(version, str) or not version.startswith("1."):
+        raise IncompatibleMetricSchemaError(
+            f"Unsupported or missing manifest_version '{version}'. Expected '1.x.x'."
+        )
+
+    gen_at = payload.get("generated_at_utc")
+    if not isinstance(gen_at, str) or not gen_at.strip():
+        raise IncompatibleMetricSchemaError(
+            "Latency benchmarks payload missing non-empty 'generated_at_utc' string."
+        )
+
+    claim_b = payload.get("claim_boundary")
+    if not isinstance(claim_b, str) or not claim_b.strip():
+        raise IncompatibleMetricSchemaError(
+            "Latency benchmarks payload missing non-empty 'claim_boundary' string."
+        )
+
+    total_benchmarks = payload.get("total_benchmarks")
+    if not isinstance(total_benchmarks, int) or isinstance(total_benchmarks, bool) or total_benchmarks <= 0:
+        raise IncompatibleMetricSchemaError(
+            f"'total_benchmarks' must be a positive integer, got {total_benchmarks}."
+        )
+
+    benchmarks = payload.get("benchmarks")
+    if not isinstance(benchmarks, Sequence) or isinstance(benchmarks, (str, bytes)):
+        raise IncompatibleMetricSchemaError(
+            f"'benchmarks' must be a list/sequence of benchmark entries, got {type(benchmarks).__name__}."
+        )
+
+    if len(benchmarks) != total_benchmarks:
+        raise IncompatibleMetricSchemaError(
+            f"'total_benchmarks' count ({total_benchmarks}) does not match length of benchmarks list ({len(benchmarks)})."
+        )
+
+    valid_tasks = ("l1", "l2")
+    valid_models = ("paper_v4", "improved_bidi_gru")
+    valid_splits = (
+        "session_scenario_disjoint",
+        "paper_flow_random",
+        "paper_flow_random_80_20",
+    )
+    summary_keys = (
+        "traffic_collection_delay",
+        "preprocessing_latency",
+        "inference_latency",
+        "end_to_end_latency",
+    )
+
+    for idx, b in enumerate(benchmarks):
+        if not isinstance(b, Mapping):
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} must be a dictionary, got {type(b).__name__}."
+            )
+
+        # Claim boundary on entry
+        entry_claim = b.get("claim_boundary")
+        if not isinstance(entry_claim, str) or not entry_claim.strip():
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} missing non-empty 'claim_boundary'."
+            )
+
+        # Task
+        task = b.get("task")
+        if task not in valid_tasks:
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} has unrecognized task '{task}'. Expected one of {valid_tasks}."
+            )
+
+        # Model
+        model = b.get("model")
+        if model not in valid_models:
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} has unrecognized model '{model}'. Expected one of {valid_models}."
+            )
+
+        # Window size
+        window_size = b.get("window_size")
+        if not isinstance(window_size, int) or isinstance(window_size, bool) or not (1 <= window_size <= 10):
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} has invalid window_size {window_size}; expected integer in [1, 10]."
+            )
+
+        # Split protocol
+        split_protocol = b.get("split_protocol")
+        if split_protocol not in valid_splits:
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} has unrecognized split_protocol '{split_protocol}'. Expected one of {valid_splits}."
+            )
+
+        # Sample count
+        sample_count = b.get("sample_count")
+        if not isinstance(sample_count, int) or isinstance(sample_count, bool) or sample_count <= 0:
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} has invalid sample_count {sample_count}; must be integer > 0."
+            )
+
+        # Batch size
+        batch_size = b.get("batch_size")
+        if not isinstance(batch_size, int) or isinstance(batch_size, bool) or batch_size != 1:
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} has invalid batch_size {batch_size}; batch_size must be 1."
+            )
+
+        for text_key in ("device", "device_name"):
+            text_value = b.get(text_key)
+            if not isinstance(text_value, str) or not text_value.strip():
+                raise IncompatibleMetricSchemaError(
+                    f"Benchmark entry at index {idx} missing non-empty '{text_key}'."
+                )
+
+        # Optional warmup iterations
+        warmup = b.get("warmup_iterations")
+        if warmup is not None and (not isinstance(warmup, int) or isinstance(warmup, bool) or warmup < 0):
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark entry at index {idx} has invalid warmup_iterations {warmup}; must be non-negative integer."
+            )
+
+        # Distribution summaries
+        required_distribution_keys = (
+            "count",
+            "mean_seconds",
+            "median_seconds",
+            "p50_seconds",
+            "p95_seconds",
+            "p99_seconds",
+            "min_seconds",
+            "max_seconds",
+            "std_seconds",
+            "mean_ms",
+            "median_ms",
+            "p50_ms",
+            "p95_ms",
+            "p99_ms",
+            "min_ms",
+            "max_ms",
+            "std_ms",
+        )
+        for s_key in summary_keys:
+            if s_key not in b:
+                raise IncompatibleMetricSchemaError(
+                    f"Benchmark entry at index {idx} missing required distribution summary '{s_key}'."
+                )
+            summary = b[s_key]
+            if not isinstance(summary, Mapping):
+                raise IncompatibleMetricSchemaError(
+                    f"Benchmark entry at index {idx} summary '{s_key}' must be a dictionary, got {type(summary).__name__}."
+                )
+
+            missing_keys = [key for key in required_distribution_keys if key not in summary]
+            if missing_keys:
+                raise IncompatibleMetricSchemaError(
+                    f"Benchmark[{idx}].{s_key} missing required fields: {missing_keys}."
+                )
+            if summary["count"] != sample_count:
+                raise IncompatibleMetricSchemaError(
+                    f"Benchmark[{idx}].{s_key}.count={summary['count']} does not match sample_count={sample_count}."
+                )
+
+            for metric_k in required_distribution_keys:
+                val = summary[metric_k]
+                if isinstance(val, bool) or not isinstance(val, (int, float)):
+                    raise IncompatibleMetricSchemaError(
+                        f"Benchmark[{idx}].{s_key}.{metric_k} must be numeric, got {val!r}."
+                    )
+                if not math.isfinite(val) or val < 0.0:
+                    raise IncompatibleMetricSchemaError(
+                        f"Benchmark[{idx}].{s_key}.{metric_k} must be non-negative and finite, got {val}."
+                    )
+
+            for suffix in ("_seconds", "_ms"):
+                min_v = summary[f"min{suffix}"]
+                p50_v = summary[f"p50{suffix}"]
+                p95_v = summary[f"p95{suffix}"]
+                p99_v = summary[f"p99{suffix}"]
+                max_v = summary[f"max{suffix}"]
+                if not (min_v <= p50_v + 1e-9 <= p95_v + 2e-9 <= p99_v + 3e-9 <= max_v + 4e-9):
+                    raise IncompatibleMetricSchemaError(
+                        f"Benchmark[{idx}].{s_key} violates percentile monotonicity or distribution bounds for {suffix}."
+                    )
+
+        throughput = b["inference_latency"].get("throughput_samples_per_second")
+        if isinstance(throughput, bool) or not isinstance(throughput, (int, float)):
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark[{idx}].inference_latency.throughput_samples_per_second must be numeric."
+            )
+        if not math.isfinite(throughput) or throughput <= 0.0:
+            raise IncompatibleMetricSchemaError(
+                f"Benchmark[{idx}].inference_latency.throughput_samples_per_second must be positive and finite."
+            )
+
+
+def load_latency_benchmarks(path_or_dict: Union[str, Path, Mapping[str, Any]]) -> dict[str, Any]:
+    """Safely load and validate Phase A operational latency benchmarks JSON.
+
+    Args:
+        path_or_dict: File path or raw dictionary.
+
+    Returns:
+        Validated dictionary payload.
+
+    Raises:
+        FileNotFoundError: If path does not exist.
+        IncompatibleMetricSchemaError: If payload violates schema.
+    """
+    if isinstance(path_or_dict, (str, Path)):
+        p = Path(path_or_dict)
+        if not p.is_file():
+            raise FileNotFoundError(f"Latency benchmarks file not found: {p}")
+        with open(p, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    elif isinstance(path_or_dict, Mapping):
+        data = dict(path_or_dict)
+    else:
+        raise IncompatibleMetricSchemaError(f"Unsupported input type: {type(path_or_dict)}")
+
+    validate_latency_benchmarks_schema(data)
     return data
 
 
@@ -1520,6 +1778,7 @@ def generate_latency_tradeoff_table(
     evidence_l2: Optional[Mapping[str, Any]] = None,
     timeseries_l1: Optional[Mapping[str, Any]] = None,
     timeseries_l2: Optional[Mapping[str, Any]] = None,
+    latency_benchmarks: Optional[Mapping[str, Any]] = None,
 ) -> ComparisonTable:
     """Generate Table 5: Early Detection Latency Trade-Off Analysis.
 
@@ -1615,6 +1874,193 @@ def generate_latency_tradeoff_table(
             "Near-perfect tunnel identification (0.998 F1) within ~1.06s",
         ],
     ]
+
+    # Deterministically append project-observed session-disjoint operational latency rows
+    if latency_benchmarks and isinstance(latency_benchmarks.get("benchmarks"), Sequence):
+        disjoint_benchmarks = [
+            b for b in latency_benchmarks["benchmarks"]
+            if isinstance(b, Mapping) and b.get("split_protocol") in (
+                SplitProtocol.SESSION_SCENARIO_DISJOINT.value,
+                "session_scenario_disjoint",
+            )
+        ]
+
+        def _bench_key(item: Mapping[str, Any]) -> tuple[int, int, str]:
+            t_val = 0 if item.get("task") == "l1" else 1
+            w_val = int(item.get("window_size", 0))
+            m_val = str(item.get("model", ""))
+            return (t_val, w_val, m_val)
+
+        disjoint_benchmarks.sort(key=_bench_key)
+
+        for b in disjoint_benchmarks:
+            task = b.get("task", "l1")
+            layer_display = LayerTask.L1.display_name if task == "l1" else LayerTask.L2.display_name
+            flow_baseline_s = 20.393 if task == "l1" else 53.924
+
+            model_key = b.get("model", "paper_v4")
+            if model_key == "paper_v4":
+                model_name = "Packet Clump LSTM (Paper v4)"
+            elif model_key == "improved_bidi_gru":
+                model_name = "Improved Masked BiGRU"
+            else:
+                model_name = str(model_key)
+
+            # Device / hardware formatting
+            dev_name = str(b.get("device_name", "")).strip()
+            dev_val = str(b.get("device", "")).strip()
+            if dev_name and dev_val:
+                if dev_val.lower() in dev_name.lower():
+                    hw_str = dev_name
+                else:
+                    hw_str = f"{dev_name} ({dev_val})"
+            elif dev_name:
+                hw_str = dev_name
+            elif dev_val:
+                hw_str = dev_val.upper() if dev_val.lower() in ("cpu", "cuda") else dev_val
+            else:
+                hw_str = "CPU"
+
+            w_size = int(b.get("window_size", 1))
+            s_count = int(b.get("sample_count", 0))
+            window_horizon = f"First {w_size} clumps (n={s_count})"
+
+            # Lookup F1-score if available
+            f1_val = b.get("f1_score")
+            if f1_val is None:
+                ts_src = timeseries_l1 if task == "l1" else timeseries_l2
+                if ts_src:
+                    rec = _find_run_record(
+                        ts_src,
+                        task=task,
+                        window_size=w_size,
+                        model=model_key,
+                        split_protocol=SplitProtocol.SESSION_SCENARIO_DISJOINT.value,
+                    )
+                    if rec:
+                        f1_val = _get_metric_val(
+                            rec.get("metrics") if isinstance(rec.get("metrics"), Mapping) else rec,
+                            "f1_score",
+                        )
+            f1_str = format_metric(f1_val, 3) if f1_val is not None else UNAVAILABLE_STR
+
+            components = [
+                (
+                    "traffic_collection_delay",
+                    "Traffic Collection Delay",
+                    "s",
+                    "Physical network clump observation time; dominates total detection delay",
+                ),
+                (
+                    "preprocessing_latency",
+                    "Sequence Preprocessing",
+                    "ms",
+                    "In-memory sequence vectorization and log-normalization (batch=1)",
+                ),
+                (
+                    "inference_latency",
+                    "Model Inference",
+                    "ms",
+                    "PyTorch batch size 1 forward pass; isolated forward pass does NOT equal detection delay",
+                ),
+                (
+                    "end_to_end_latency",
+                    "End-to-End Latency",
+                    "s",
+                    "Aligned per-sample sum of collection delay, preprocessing, and model inference",
+                ),
+            ]
+
+            has_nested = any(c_key in b for c_key, _, _, _ in components)
+
+            if has_nested:
+                for comp_key, comp_title, unit, default_desc in components:
+                    if comp_key not in b:
+                        continue
+                    summary = b[comp_key]
+                    if not isinstance(summary, Mapping):
+                        continue
+
+                    methodology_str = (
+                        f"{ProvenanceStatus.PROJECT_OBSERVED_STATISTICAL.badge} {model_name} - {comp_title} (Device: {hw_str})"
+                    )
+
+                    if unit == "s":
+                        mean_v = summary.get("mean_seconds", summary.get("mean"))
+                        median_v = summary.get("median_seconds", summary.get("p50_seconds", summary.get("median")))
+                        mean_str = format_latency(mean_v, 3) if mean_v is not None else UNAVAILABLE_STR
+                        median_str = format_latency(median_v, 3) if median_v is not None else UNAVAILABLE_STR
+                    else:  # ms
+                        mean_v = summary.get("mean_ms")
+                        median_v = summary.get("median_ms", summary.get("p50_ms"))
+                        mean_str = f"{float(mean_v):.3f} ms" if mean_v is not None else UNAVAILABLE_STR
+                        median_str = f"{float(median_v):.3f} ms" if median_v is not None else UNAVAILABLE_STR
+
+                    # Latency reduction vs baseline
+                    if comp_key == "end_to_end_latency" and mean_v is not None and float(mean_v) > 0.0:
+                        e2e_s = float(mean_v)
+                        if e2e_s < flow_baseline_s:
+                            red_pct = (1.0 - e2e_s / flow_baseline_s) * 100.0
+                            reduction_str = f"{red_pct:.1f}% reduction (mean)"
+                        else:
+                            reduction_str = "0.0% reduction"
+                    elif comp_key == "traffic_collection_delay" and mean_v is not None and float(mean_v) > 0.0:
+                        col_s = float(mean_v)
+                        if col_s < flow_baseline_s:
+                            red_pct = (1.0 - col_s / flow_baseline_s) * 100.0
+                            reduction_str = f"{red_pct:.1f}% reduction (collection only)"
+                        else:
+                            reduction_str = "0.0% reduction"
+                    else:
+                        reduction_str = "N/A (sub-component)"
+
+                    # Operational practicality
+                    if comp_key == "inference_latency":
+                        tput = summary.get("throughput_samples_per_second")
+                        if tput is not None and float(tput) > 0.0:
+                            practicality_str = (
+                                f"PyTorch batch size 1 forward pass ({float(tput):.1f} samples/s); "
+                                "isolated forward pass does NOT equal detection delay"
+                            )
+                        else:
+                            practicality_str = default_desc
+                    elif comp_key == "end_to_end_latency" and b.get("operational_practicality"):
+                        practicality_str = str(b["operational_practicality"])
+                    else:
+                        practicality_str = default_desc
+
+                    rows.append([
+                        layer_display,
+                        methodology_str,
+                        window_horizon,
+                        f1_str,
+                        mean_str,
+                        median_str,
+                        reduction_str,
+                        practicality_str,
+                    ])
+            else:
+                # Flat fallback
+                mean_s = b.get("mean_duration_seconds", b.get("mean_seconds"))
+                med_s = b.get("median_duration_seconds", b.get("median_seconds", b.get("p50_seconds")))
+                mean_str = format_latency(mean_s, 3) if mean_s is not None else UNAVAILABLE_STR
+                med_str = format_latency(med_s, 3) if med_s is not None else UNAVAILABLE_STR
+                if mean_s is not None and float(mean_s) > 0.0 and float(mean_s) < flow_baseline_s:
+                    red_pct = (1.0 - float(mean_s) / flow_baseline_s) * 100.0
+                    reduction_str = f"{red_pct:.1f}% reduction (mean)"
+                else:
+                    reduction_str = UNAVAILABLE_STR
+                meth_str = f"{ProvenanceStatus.PROJECT_OBSERVED.badge} {model_name} (Device: {hw_str})"
+                rows.append([
+                    layer_display,
+                    meth_str,
+                    window_horizon,
+                    f1_str,
+                    mean_str,
+                    med_str,
+                    reduction_str,
+                    str(b.get("operational_practicality", "Project-observed operational benchmark")),
+                ])
 
     return ComparisonTable(
         table_id="latency_tradeoffs",
@@ -1771,6 +2217,7 @@ def generate_full_comparison_report(
     timeseries_l2: Optional[Mapping[str, Any]] = None,
     flow_random_metrics: Optional[Mapping[str, Any]] = None,
     group_disjoint_metrics: Optional[Mapping[str, Any]] = None,
+    latency_benchmarks: Optional[Mapping[str, Any]] = None,
 ) -> dict[str, ComparisonTable]:
     """Generate all 6 comparison tables for report, presentation, and data audit.
 
@@ -1788,7 +2235,11 @@ def generate_full_comparison_report(
         flow_random_metrics, group_disjoint_metrics
     )
     tables["latency_tradeoffs"] = generate_latency_tradeoff_table(
-        evidence_l1, evidence_l2, timeseries_l1, timeseries_l2
+        evidence_l1,
+        evidence_l2,
+        timeseries_l1,
+        timeseries_l2,
+        latency_benchmarks=latency_benchmarks,
     )
     tables["improvements"] = generate_improvements_table(
         evidence_l1, evidence_l2, timeseries_l1

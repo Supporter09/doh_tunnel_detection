@@ -20,7 +20,7 @@ import math
 import random
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Iterable, NamedTuple, Sequence
+from typing import Any, Callable, Iterable, Mapping, NamedTuple, Sequence
 
 try:
     from .clumping import Clump, clumping, segment_clumps
@@ -1001,3 +1001,31 @@ def samples_to_numpy_payload(samples: Sequence[SequenceSample]) -> dict[str, Any
         "session_ids": [s.metadata.session_id for s in samples],
         "scenario_ids": [s.metadata.scenario_id for s in samples],
     }
+
+
+def compute_window_collection_delay(clumps: Sequence[Any], window_size: int) -> float:
+    """Compute physical network observation duration for a clump window in seconds.
+
+    Formula: sum(c.duration + c.interarrival for c in clumps[:window_size])
+    """
+    if not clumps or window_size <= 0:
+        return 0.0
+    window_clumps = clumps[:window_size]
+    total_delay = 0.0
+    for c in window_clumps:
+        if hasattr(c, "duration") and hasattr(c, "interarrival"):
+            dur = float(getattr(c, "duration", 0.0))
+            ia = float(getattr(c, "interarrival", 0.0))
+        elif isinstance(c, Mapping):
+            dur = float(c.get("duration", 0.0))
+            ia = float(c.get("interarrival", 0.0))
+        else:
+            dur = 0.0
+            ia = 0.0
+        total_delay += (dur + ia)
+    return float(total_delay)
+
+
+def compute_segment_duration(segment: Sequence[Clump]) -> float:
+    """Backward compatible alias for window collection delay on Clump sequences."""
+    return compute_window_collection_delay(segment, len(segment))

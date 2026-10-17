@@ -33,5 +33,8 @@
   "learning_rate": 0.001,
   "patience": 5,
   "enable_score_calibration": true,
+  "enable_latency_benchmark": false,
+  "latency_warmup_iterations": 10,
+  "latency_max_samples": 500,
   "description": "Safe default audit configuration for raw-PCAP packet-clump sequence classification. Mode must be explicitly set to 'train' after pcap_audit.json inspection and split validation."
 }

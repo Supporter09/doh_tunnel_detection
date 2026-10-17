@@ -93,4 +93,8 @@ checkpoints/
 !data/README.md
 !data/manifests/
 !data/manifests/*.json
+!data/manifests/*.csv
 !data/*.manifest.json
+
+# Presentation temporary backup snapshots
+presentations/**/backup/
