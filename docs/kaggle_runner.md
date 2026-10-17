@@ -442,7 +442,7 @@ Mô hình chuỗi thời gian tuân thủ nghiêm ngặt chuẩn dữ liệu DoH
 
 | Tham số hạn ngạch | Giá trị mặc định | Mục đích bảo vệ tài nguyên |
 | :--- | :---: | :--- |
-| `max_capture_members` | `100` | Giới hạn số lượng tệp/thành viên capture được đọc trong phiên. |
+| `max_capture_members` | `20,000` | Trần discovery cao hơn inventory quan sát 13,754 capture; huấn luyện vẫn dừng sớm theo quota luồng mỗi lớp. |
 | `max_flows_per_class` | `500` | Số lượng luồng tối đa thu thập cho mỗi lớp (được áp dụng theo nhãn luồng thực tế). |
 | `max_raw_packets` | `1,000,000` | Giới hạn tối đa 1 triệu gói tin thô được quét mỗi capture. |
 | `max_raw_bytes` | `1,073,741,824` | Giới hạn tối đa 1 GB dữ liệu gói tin thô mỗi capture. |

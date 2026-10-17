@@ -499,7 +499,7 @@ def _scan_zip_archive(
                     max_compression_ratio=max_compression_ratio,
                 )
                 budget_tracker.charge(info.file_size, info.filename)
-                meta = derive_capture_metadata(info.filename)
+                meta = derive_capture_metadata(f"{zip_path.name}/{info.filename}")
                 src = CaptureSource(
                     path=str(zip_path),
                     member_name=info.filename,
@@ -552,7 +552,7 @@ def _scan_zip_archive(
                                     max_compression_ratio=max_compression_ratio,
                                 )
                                 budget_tracker.charge(inner_info.file_size, f"{info.filename}/{inner_info.filename}")
-                                combined_virtual_path = f"{info.filename}/{inner_info.filename}"
+                                combined_virtual_path = f"{zip_path.name}/{info.filename}/{inner_info.filename}"
                                 meta = derive_capture_metadata(combined_virtual_path)
                                 src = CaptureSource(
                                     path=str(zip_path),

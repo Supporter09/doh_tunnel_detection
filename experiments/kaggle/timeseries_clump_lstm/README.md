@@ -113,7 +113,7 @@ This runner enforces a strict, explicit distinction across three scientific para
 | `window_sizes` | `list[int]` | `[3, 6]` | Clump sequence window sizes ($l$). |
 | `models` | `list[str]` | `["paper_v4", "improved_bidi_gru"]` | Models to train. |
 | `seed` | `int` | `42` | Global pseudo-random seed. |
-| `max_capture_members` | `int` | `100` | Maximum capture files/members to parse. |
+| `max_capture_members` | `int` | `20000` | Discovery ceiling above the observed 13,754 captures; training still stops at per-class flow quotas. |
 | `max_flows_per_class` | `int` | `500` | Maximum flows to collect per classification class. |
 | `max_raw_packets` | `int` | `1000000` | Finite upper bound on raw packets parsed per capture (1M). |
 | `max_raw_bytes` | `int` | `1073741824` | Finite upper bound on raw packet bytes parsed per capture (1 GB). |

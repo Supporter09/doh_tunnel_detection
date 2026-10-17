@@ -131,6 +131,24 @@ class TestDiscoveryAndNestedZipStreaming(unittest.TestCase):
             "captures_bundle.zip:inner_archive.zip/MaliciousDoH/iodine_inner.pcap",
             source_ids,
         )
+
+    def test_outer_archive_name_controls_malicious_scenario(self) -> None:
+        isolated_root = self.root / "outer_context"
+        isolated_root.mkdir()
+        archive_path = isolated_root / "MaliciousDoH-dnscat2-Pcap-001-600.zip"
+        with zipfile.ZipFile(archive_path, "w") as archive:
+            archive.writestr(
+                "dsncat2_default-baseline_1111_doh10_2020-03-29T11_12_39.pcap",
+                b"PCAP",
+            )
+
+        sources = discover_capture_sources(isolated_root)
+
+        self.assertEqual(len(sources), 1)
+        self.assertEqual(sources[0].category, "malicious_doh")
+        self.assertEqual(sources[0].scenario_id, "malicious_doh_dnscat2")
+        self.assertTrue(sources[0].is_malicious)
+
     def test_streaming_without_disk_extraction(self) -> None:
         sources = discover_capture_sources(self.root)
         source_map = {s.source_id: s for s in sources}

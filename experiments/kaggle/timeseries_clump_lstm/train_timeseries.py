@@ -258,7 +258,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "window_sizes": [3, 6],
     "models": ["paper_v4", "improved_bidi_gru"],
     "seed": 42,
-    "max_capture_members": 100,
+    "max_capture_members": 20_000,
     "max_flows_per_class": 500,
     "max_raw_packets": 1_000_000,
     "max_raw_bytes": 1_073_741_824,                      # 1 GB raw packet bytes per capture
