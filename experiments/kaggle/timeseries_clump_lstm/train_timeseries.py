@@ -233,6 +233,7 @@ VALID_MODELS: Set[str] = {"paper_v4", "improved_bidi_gru", "all"}
 RESOURCE_CAP_KEYS: Tuple[str, ...] = (
     "max_capture_members",
     "max_flows_per_class",
+    "max_flows_per_capture",
     "max_raw_packets",
     "max_raw_bytes",
     "max_capture_packets",
@@ -260,6 +261,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "seed": 42,
     "max_capture_members": 20_000,
     "max_flows_per_class": 500,
+    "max_flows_per_capture": 25,
     "max_raw_packets": 1_000_000,
     "max_raw_bytes": 1_073_741_824,                      # 1 GB raw packet bytes per capture
     "max_capture_packets": 200_000,
@@ -667,6 +669,7 @@ class BoundedFlowRecord:
 def stream_and_collect_flows(
     capture_sources: List[Any],
     max_flows_per_class: Optional[int] = 500,
+    max_flows_per_capture: Optional[int] = 25,
     task: str = "both",
     max_raw_packets: Optional[int] = None,
     max_raw_bytes: Optional[int] = None,
@@ -732,6 +735,7 @@ def stream_and_collect_flows(
             session_id = getattr(capture, "session_id", f"sess_{idx}")
             capture_cat = getattr(capture, "category", "non_doh")
 
+        retained_from_capture = 0
         pcap_stats: Dict[str, Any] = {}
         try:
             with CaptureStreamOpener(capture) as stream:
@@ -748,6 +752,11 @@ def stream_and_collect_flows(
                     max_flow_bytes=max_flow_bytes,
                     stats=pcap_stats,
                 ):
+                    if (
+                        max_flows_per_capture is not None
+                        and retained_from_capture >= max_flows_per_capture
+                    ):
+                        break
                     total_flows_processed += 1
                     if getattr(flow, "truncated", False):
                         flows_truncated_count += 1
@@ -839,6 +848,7 @@ def stream_and_collect_flows(
                         truncated=getattr(flow, "truncated", False),
                     )
                     retained_flows.append(record)
+                    retained_from_capture += 1
 
                     if quotas_satisfied():
                         break
@@ -871,6 +881,7 @@ def stream_and_collect_flows(
         counters["total_flows_processed"] = total_flows_processed
         counters["flows_retained"] = len(retained_flows)
         counters["class_flow_counts"] = dict(class_flow_counts)
+        counters["max_flows_per_capture"] = max_flows_per_capture
         counters["quotas_satisfied"] = quotas_satisfied()
         counters["flows_truncated"] = flows_truncated_count
         counters["captures_truncated"] = captures_truncated_count
@@ -1240,6 +1251,7 @@ def run_timeseries_pipeline(
         capture_sources,
         max_flows_per_class=config.get("max_flows_per_class"),
         task=task_mode,
+        max_flows_per_capture=config.get("max_flows_per_capture"),
         max_raw_packets=config.get("max_raw_packets"),
         max_raw_bytes=config.get("max_raw_bytes"),
         max_capture_packets=config.get("max_capture_packets"),
@@ -1672,10 +1684,10 @@ def run_timeseries_pipeline(
             ),
         },
         "execution_summary": {
-            "tasks_evaluated": tasks_to_run,
-            "models_evaluated": models_to_run,
-            "window_sizes_evaluated": window_sizes_to_run,
-            "split_protocols_evaluated": protocols_to_run,
+            "tasks_evaluated": sorted({str(row["task"]) for row in all_metric_rows}),
+            "models_evaluated": sorted({str(row["model"]) for row in all_metric_rows}),
+            "window_sizes_evaluated": sorted({int(row["window_size"]) for row in all_metric_rows}),
+            "split_protocols_evaluated": sorted({str(row["split_protocol"]) for row in all_metric_rows}),
             "total_metric_rows": len(all_metric_rows),
             "duration_seconds": round(duration_sec, 2),
         },

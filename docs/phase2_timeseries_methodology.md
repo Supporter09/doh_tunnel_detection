@@ -265,6 +265,7 @@ Tệp cấu hình `experiments/kaggle/timeseries_clump_lstm/run_config.json` tí
 | :--- | :---: | :--- |
 | `max_capture_members` | `20,000` | Trần discovery cao hơn inventory quan sát 13,754 capture; huấn luyện vẫn dừng sớm theo quota luồng mỗi lớp. |
 | `max_flows_per_class` | `500` | Giới hạn tối đa 500 luồng thu thập cho mỗi lớp phân loại (áp dụng theo nhãn thực tế). |
+| `max_flows_per_capture` | `25` | Ngăn một capture/session chiếm hết quota lớp trước khi split group-disjoint. |
 | `max_raw_packets` | `1,000,000` | Giới hạn tối đa 1 triệu gói tin thô được phân tích trong mỗi tệp capture. |
 | `max_raw_bytes` | `1,073,741,824` | Giới hạn tối đa 1 GB dữ liệu gói tin thô cho mỗi capture. |
 | `max_capture_packets` | `200,000` | Giới hạn tối đa 200,000 gói tin TLS Application Data được chấp nhận mỗi capture. |

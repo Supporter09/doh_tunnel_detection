@@ -286,6 +286,35 @@ class TestQuotaEnforcementByActualFlowLabel(unittest.TestCase):
             self.assertEqual(l1_counts[0], 1, "Non-DoH quota must cap at 1 despite benign_doh capture category")
             self.assertEqual(l1_counts[1], 1, "Benign DoH quota must cap at 1")
 
+    def test_per_capture_cap_preserves_session_diversity(self) -> None:
+        mock_capture = {
+            "filename": "busy_capture.pcap",
+            "scenario_id": "benign_doh_chrome",
+            "session_id": "single_session",
+            "category": "benign_doh",
+        }
+
+        class MockFlow:
+            def __init__(self, fid: str) -> None:
+                self.flow_id = fid
+                self.clumps = [make_test_clump()]
+                self.packets = []
+                self.start_time = 0.0
+                self.end_time = 0.01
+
+        with patch("train_timeseries.CaptureStreamOpener") as mock_opener, \
+             patch("train_timeseries.iter_pcap_flows", return_value=[MockFlow(str(i)) for i in range(5)]), \
+             patch("train_timeseries.labels_for_flow", return_value={"l1_label": 0, "l2_label": None}):
+            mock_opener.return_value.__enter__.return_value = None
+            retained = runner.stream_and_collect_flows(
+                [mock_capture],
+                max_flows_per_class=10,
+                max_flows_per_capture=2,
+                task="l1",
+            )
+
+        self.assertEqual(len(retained), 2)
+
 
 class TestAuditModeExecution(unittest.TestCase):
     """Verifies that audit mode executes cleanly and produces metadata without training models."""
@@ -433,6 +462,20 @@ class TestTinySyntheticPipelineRun(unittest.TestCase):
             # Verify models evaluated
             models_evaluated = {r["model"] for r in rows}
             self.assertEqual(models_evaluated, {"paper_v4", "improved_bidi_gru"})
+
+            with open(output_dir / "experiment_manifest.json", "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+            execution_summary = manifest["execution_summary"]
+            self.assertEqual(execution_summary["tasks_evaluated"], ["l1", "l2"])
+            self.assertEqual(
+                execution_summary["models_evaluated"],
+                ["improved_bidi_gru", "paper_v4"],
+            )
+            self.assertEqual(execution_summary["window_sizes_evaluated"], [3, 6])
+            self.assertEqual(
+                execution_summary["split_protocols_evaluated"],
+                ["paper_flow_random"],
+            )
 
             # Verify training_history.csv is populated
             history_path = output_dir / "training_history.csv"

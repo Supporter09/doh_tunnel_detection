@@ -115,6 +115,7 @@ This runner enforces a strict, explicit distinction across three scientific para
 | `seed` | `int` | `42` | Global pseudo-random seed. |
 | `max_capture_members` | `int` | `20000` | Discovery ceiling above the observed 13,754 captures; training still stops at per-class flow quotas. |
 | `max_flows_per_class` | `int` | `500` | Maximum flows to collect per classification class. |
+| `max_flows_per_capture` | `int` | `25` | Prevents one capture/session from exhausting a class quota before group-disjoint splitting. |
 | `max_raw_packets` | `int` | `1000000` | Finite upper bound on raw packets parsed per capture (1M). |
 | `max_raw_bytes` | `int` | `1073741824` | Finite upper bound on raw packet bytes parsed per capture (1 GB). |
 | `max_capture_packets` | `int` | `200000` | Finite upper bound on accepted TLS packets per capture (200k). |
