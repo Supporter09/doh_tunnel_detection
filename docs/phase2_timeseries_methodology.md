@@ -359,10 +359,55 @@ run_config.json ("mode": "train")
 
 ---
 
-## 12. Tài Liệu Đối Chiếu Bắt Buộc
+## 12. Đo Trễ Vận Hành Thực Nghiệm (Phase A Operational Latency Benchmarking)
+
+Để trả lời chính xác câu hỏi thực tế: *"Quyết định sớm theo chuỗi clump nhanh hơn chờ trọn luồng bao nhiêu và thời gian thực sự tiêu tốn ở đâu?"*, dự án cài đặt module microbenchmarking chuyên dụng `src/doh_reproduction/operational_latency.py`.
+
+### 12.1. Bốn Thành Phần Thời Gian Tách Biệt
+1. **Traffic Collection Delay ($T_{\text{collect}}$)**: Thời gian vật lý trên đường truyền mạng để thu thập đủ $\ell$ clumps:
+   $$T_{\text{collect}} = \sum_{i=1}^{\ell} (\text{duration}_i + \text{interarrival}_i)$$
+2. **Sequence Preprocessing Latency ($T_{\text{prep}}$)**: Thời gian trích xuất vector đặc trưng 5-tuple, áp dụng chuẩn hóa logarit DoHLyzer, đệm post-padding và nạp tensor vào bộ nhớ thiết bị tính toán.
+3. **Model Inference Latency ($T_{\text{infer}}$)**: Thời gian thực thi forward pass của mạng nơ-ron với batch size = 1, có warm-up passes và đồng bộ hóa thiết bị (CUDA synchronization).
+4. **End-to-End Latency ($T_{\text{e2e}}$)**: Tổng thời gian căn chỉnh theo từng mẫu kiểm thử:
+   $$T_{\text{e2e}} = T_{\text{collect}} + T_{\text{prep}} + T_{\text{infer}}$$
+
+### 12.2. Kết Quả Quan Sát Thực Nghiệm Trên First-Window Test Flows
+Trên tập kiểm thử session-disjoint từ PCAP thực tế (nền tảng CPU ARM):
+
+| Tầng / Cửa sổ | Mô hình | $F_1$ Score | Collection p50 | Inference p50 | Throughput | End-to-End p50 | End-to-End p95 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **L1 ($\ell=5$)** | Paper v4 LSTM | 0.9179 | 0.477 s | 0.061 ms | 13,464 mẫu/s | 0.477 s | 3.566 s |
+| **L1 ($\ell=7$, Best)** | **Masked BiGRU** | **0.9651** | **0.871 s** | **0.132 ms** | **7,552 mẫu/s** | **0.871 s** | **30.055 s** |
+| **L2 ($\ell=5$)** | Masked BiGRU | 0.7719 | 0.086 s | 0.107 ms | 9,303 mẫu/s | 0.086 s | 3.569 s |
+| **L2 ($\ell=10$, Best)** | **Masked BiGRU** | **0.9864** | **3.513 s** | **0.168 ms** | **5,904 mẫu/s** | **3.513 s** | **30.055 s** |
+
+**Phát hiện bản chất**:
+- Tốc độ tính toán của mô hình (Inference) cực kỳ nhanh ($0.06 - 0.17$ ms), đạt $>5,900$ mẫu/giây ngay trên một nhân CPU.
+- **Thời gian thu thập gói tin (Traffic Collection Delay) chiếm $>99.9\%$ tổng trễ phát hiện**. Quyết định nhanh hay chậm phụ thuộc chủ yếu vào tần suất phát sinh gói tin của ứng dụng duyệt web hoặc công cụ tạo đường hầm DNS, hoàn toàn không phải do độ phức tạp tính toán của mạng LSTM/BiGRU.
+
+---
+
+## 13. Kế Hoạch Mở Rộng Quy Mô Huấn Luyện (Phase B Windows Staged-Scale Protocol)
+
+Để kiểm tra tính hội tụ và độ ổn định khi tăng dung lượng mẫu luồng (trên máy trạm Windows trang bị GPU NVIDIA RTX 2060-class), dự án chuẩn hóa quy trình tăng dần theo từng nấc an toàn có khả năng phục hồi (resumable):
+
+* **Thang tăng tiến (Ladder)**:
+  - `stage-25`: `max_flows_per_capture=25`, `max_flows_per_class=500` (đối chiếu baseline hiện tại).
+  - `stage-50`: `max_flows_per_capture=50`, `max_flows_per_class=1000` (tăng gấp đôi mẫu).
+  - `stage-100`: `max_flows_per_capture=100`, `max_flows_per_class=2500` (quy mô trung bình).
+  - `stage-250`: `max_flows_per_capture=250`, `max_flows_per_class=5000` (quy mô lớn trước khi uncapped).
+  - `full` (tuỳ chọn): Gỡ bỏ hạn ngạch flow/window quota, giữ nguyên các giới hạn bảo vệ an toàn gói/byte/archive.
+* **Cơ chế Resumable**: Đơn vị phục hồi là `stage + task` (ví dụ `stage-50-l1`). Runner tự động bỏ qua các đơn vị đã phát sinh `experiment_manifest.json` có trạng thái `training_completed` và `latency_benchmarks.json` hợp lệ.
+* **Chi tiết hướng dẫn**: Xem đầy đủ tại [`docs/windows_rtx2060_scale_training.md`](windows_rtx2060_scale_training.md) và thực thi qua [`scripts/windows/run_timeseries_scale.ps1`](../scripts/windows/run_timeseries_scale.ps1).
+
+---
+
+## 14. Tài Liệu Đối Chiếu Bắt Buộc
 
 1. **Hợp đồng so sánh & báo cáo kết quả**: `docs/results_comparison_schema.md`
-2. **Hướng dẫn vận hành Kaggle Runner**: `docs/kaggle_runner.md`
-3. **Kết quả cải tiến Phase 1 Tabular**: `docs/phase1_tabular_improvements.md`
-4. **Giao thức tái hiện thực nghiệm chi tiết**: `docs/replication_protocol.md`
-5. **Phân tích chuyên sâu bài báo gốc & tham số khuyết thiếu**: `docs/paper_analysis.md`
+2. **Hướng dẫn huấn luyện mở rộng Windows RTX 2060**: `docs/windows_rtx2060_scale_training.md`
+3. **Hướng dẫn vận hành CLI báo cáo so sánh**: `docs/report_generation_cli.md`
+4. **Hướng dẫn vận hành Kaggle Runner**: `docs/kaggle_runner.md`
+5. **Kết quả cải tiến Phase 1 Tabular**: `docs/phase1_tabular_improvements.md`
+6. **Giao thức tái hiện thực nghiệm chi tiết**: `docs/replication_protocol.md`
+7. **Phân tích chuyên sâu bài báo gốc & tham số khuyết thiếu**: `docs/paper_analysis.md`

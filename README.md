@@ -97,13 +97,15 @@ python3 scripts/generate_report.py \
   --output-dir reports/comparison/
 ```
 
-Khi có kết quả time-series Phase 2 (từ `train_timeseries.py`), bổ sung cờ `--phase2-metrics`:
+Khi có kết quả time-series Phase 2 và dữ liệu độ trễ vận hành Phase A, bổ sung cờ `--phase2-metrics` và `--phase2-latency`:
 ```bash
+cd doh_tunnel_detection
 python3 scripts/generate_report.py \
   --phase1-l1 data/manifests/kaggle_phase1_l1_evidence.json \
   --phase1-l2 data/manifests/kaggle_phase1_l2_evidence.json \
-  --phase2-metrics artifacts/kaggle/metrics.json \
-  --output-dir reports/comparison/ \
+  --phase2-metrics data/manifests/timeseries_comprehensive_metrics.json \
+  --phase2-latency data/manifests/timeseries_operational_latency.json \
+  --output-dir reports/paper_comparison/ \
   --force
 ```
 
@@ -223,6 +225,10 @@ Dự án cung cấp runner chạy trên môi trường Kaggle CPU phục vụ ki
 
 Dự án cung cấp bộ tài liệu hoàn chỉnh hỗ trợ triển khai, kiểm toán dữ liệu và tái hiện học thuật:
 
+* [**docs/phase2_timeseries_methodology.md**](docs/phase2_timeseries_methodology.md): Phương pháp luận chuỗi thời gian Packet-Clump Phase 2, cấu trúc archive PCAP, cơ chế đọc luồng, phân tích dữ liệu rò rỉ (leakage), kết quả cải tiến BiGRU và số liệu đo trễ Phase A.
+* [**docs/windows_rtx2060_scale_training.md**](docs/windows_rtx2060_scale_training.md): Hướng dẫn huấn luyện mở rộng quy mô (Phase B Staged-Scale Ladder) trên máy trạm Windows với GPU NVIDIA RTX 2060-class kèm script PowerShell tự động phục hồi.
+* [**docs/report_generation_cli.md**](docs/report_generation_cli.md): Đặc tả CLI `generate_report.py`, cấu trúc các bảng CSV và quy tắc kiểm định lược đồ đối soát.
+* [**docs/results_comparison_schema.md**](docs/results_comparison_schema.md): Lược đồ 6 bảng đối chiếu kết quả thực nghiệm, định nghĩa xuất xứ (provenance) và quy chuẩn độ trễ vận hành.
 * [**docs/kaggle_runner.md**](docs/kaggle_runner.md): Hướng dẫn vận hành Kaggle runner an toàn, quy trình kiểm toán schema trước (audit-first), quản lý bí mật CLI, cơ chế băm snapshot xác thực (SHA-256) và yêu cầu bắt buộc commit Git trước khi quảng bá tạo tác thực nghiệm.
 * [**docs/kaggle_tabular_benchmark.md**](docs/kaggle_tabular_benchmark.md): Kết quả có provenance của benchmark tabular Layer 1 và Layer 2 trên Kaggle; không phải kết quả tái hiện LSTM.
 * [**docs/phase1_tabular_improvements.md**](docs/phase1_tabular_improvements.md): So sánh HistGradientBoosting, threshold calibration và feature ablation cho demo hai tầng dựa trên flow statistics.
@@ -232,7 +238,7 @@ Dự án cung cấp bộ tài liệu hoàn chỉnh hỗ trợ triển khai, ki�
 * [**docs/paper_analysis.md**](docs/paper_analysis.md): Phân tích chi tiết bài báo gốc, 28 đặc trưng thống kê DoHLyzer, biểu diễn chuỗi clump 5-tuple, đối chiếu các bảng kết quả III–VI và danh mục các tham số bị khuyết thiếu.
 * [**docs/replication_protocol.md**](docs/replication_protocol.md): Giao thức tái hiện khoa học nghiêm ngặt, đối chiếu giữa tái hiện nguyên bản (exact replication) và giao thức cải tiến hiện đại (session-disjoint split, train-only normalization).
 * [**docs/risk_register.md**](docs/risk_register.md): Sổ đăng ký và quản trị rủi ro học thuật, bản quyền tập dữ liệu, rò rỉ dữ liệu (data leakage), trôi dạt phiên bản DNS resolver và an toàn phòng thí nghiệm.
----
+* [**presentations/doh_paper_reproduction_20261017/**](presentations/doh_paper_reproduction_20261017/): Bộ slide báo cáo học thuật 15 trang hoàn chỉnh xuất bản định dạng native PPTX (DrawingML shapes, charts, tables) kèm toàn bộ ghi chú thuyết trình (Speaker Notes).
 
 ## 7. Trích Dẫn Học Thuật Chuẩn (BibTeX Citation)
 Khi sử dụng tài nguyên hoặc tham chiếu đến bài báo gốc trong các báo cáo khoa học:
