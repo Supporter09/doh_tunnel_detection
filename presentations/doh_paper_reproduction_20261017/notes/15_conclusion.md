@@ -1,0 +1,1 @@
+The reproduction keeps the statistical and four-layer LSTM baselines traceable. The corrected protocol tests transfer to unseen sessions, and the mask-aware BiGRU improves both tasks under that protocol. The primary result is methodological validity; the model gain matters because it survives the stricter evaluation.

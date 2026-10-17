@@ -1,0 +1,1 @@
+When each model is compared at its own best corrected window, layer-one F1 increases from 0.9179 to 0.9651 and layer-two F1 from 0.9425 to 0.9864. The absolute gains are 4.73 and 4.40 percentage points, with zero observed false-positive rate at both improved optima. This is the project’s positive model result within the capped session-disjoint sample.

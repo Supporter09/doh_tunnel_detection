@@ -1,0 +1,28 @@
+{
+  "schema": "ppt-master.source_to_md.profile.v1",
+  "converter": "pdf_to_md.py",
+  "conversion_type": "pdf",
+  "source": {
+    "path": "/Users/charlie/Desktop/HUST/MalwareAnalysis/Papers for Capstone Projects/NetworkData2.pdf",
+    "name": "NetworkData2.pdf",
+    "suffix": ".pdf",
+    "kind": "file",
+    "exists": true,
+    "size_bytes": 519880
+  },
+  "outputs": {
+    "markdown": "doh-ppt-paper-source.md",
+    "asset_dir": "doh-ppt-paper-source_files",
+    "image_manifest": "doh-ppt-paper-source_files/image_manifest.json",
+    "image_count": 9
+  },
+  "markdown": {
+    "line_count": 421,
+    "char_count": 42905,
+    "heading_count": 2,
+    "table_count": 6,
+    "image_ref_count": 9,
+    "link_count": 0
+  },
+  "warnings": []
+}

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <rect id="background" data-pptx-role="background" x="0" y="0" width="1280" height="720" fill="#F7F9FC"/>
+  <rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108">
+    <text x="100" y="72" font-family="Consolas, Courier New" font-size="16" fill="#0E7490" letter-spacing="2">01 · PROBLEM</text>
+    <text x="100" y="132" font-family="Aptos Display, Arial" font-size="42" font-weight="bold" fill="#14324B">Encryption hides content—not packet behavior</text>
+  </g>
+  <g id="hidden-channel" data-pptx-bounds="100 188 470 350">
+    <rect x="100" y="188" width="470" height="350" rx="10" fill="#EAF0F5"/>
+    <!-- icon: tabler-outline/shield-lock -->
+  <g transform="translate(136, 224) scale(2.41667)" fill="none" stroke="#14324B" stroke-width="2">
+    <path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3" />
+    <path d="M11 11a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+    <path d="M12 12l0 2.5" />
+  </g>
+    <text x="218" y="250" font-size="28" font-weight="bold" fill="#14324B">Encrypted payload</text>
+    <line x1="140" y1="308" x2="528" y2="308" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="140" y="354" font-size="24" fill="#172033">DNS names and answers</text>
+    <text x="140" y="397" font-size="24" fill="#172033">Application semantics</text>
+    <text x="140" y="440" font-size="24" fill="#172033">Tunnel commands and data</text>
+    <text x="140" y="501" font-size="18" fill="#5B6875">Opaque inside HTTPS/TLS</text>
+  </g>
+  <g id="visible-channel" data-pptx-bounds="650 188 470 350">
+    <rect x="650" y="188" width="470" height="350" rx="10" fill="#FFFFFF" stroke="#0E7490" stroke-width="3"/>
+    <!-- icon: tabler-outline/chart-line -->
+  <g transform="translate(686, 224) scale(2.41667)" fill="none" stroke="#0E7490" stroke-width="2">
+    <path d="M4 19l16 0" />
+    <path d="M4 15l4 -6l4 2l4 -5l4 4" />
+  </g>
+    <text x="768" y="250" font-size="28" font-weight="bold" fill="#14324B">Observable sequence</text>
+    <line x1="690" y1="308" x2="1078" y2="308" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="690" y="354" font-size="24" fill="#172033">Packet direction</text>
+    <text x="690" y="397" font-size="24" fill="#172033">Packet length</text>
+    <text x="690" y="440" font-size="24" fill="#172033">Timing and burst structure</text>
+    <text x="690" y="501" font-size="18" fill="#0E7490">Learnable without decryption</text>
+  </g>
+  <g id="takeaway" data-pptx-bounds="100 574 1020 70">
+    <text x="100" y="607" font-size="28" font-weight="bold" fill="#172033">Core hypothesis:</text>
+    <text x="300" y="607" font-size="28" fill="#172033">DoH tunneling changes traffic shape enough to classify.</text>
+  </g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28">
+    <text x="100" y="682" font-size="14" fill="#5B6875">Source: original paper, Sections I–III</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">02</text>
+  </g>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/><rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">09 · LEAKAGE AUDIT</text><text x="100" y="132" font-family="Aptos Display" font-size="30" font-weight="bold" fill="#14324B">Random flow splits overstate cross-session generalization</text></g>
+  <!-- chart-plot-area: object=split-comparison | 162,252,800,524 -->
+  <g id="split-comparison" data-pptx-replace-with="chart" data-pptx-bounds="100 184 760 404" data-pptx-fallback-sha256="c56d287cc583632798bc6ca76ae28b8d31e60cd2b6939dd1c17828b5b5af4cec">
+    <metadata type="application/json"><![CDATA[{"x":100,"y":184,"width":760,"height":404,"name":"split-comparison","type":"column","categories":["Layer 1 · l=6","Layer 2 · l=3"],"series":[{"name":"Flow-random","values":[0.9784,0.9405],"fill":"#14324B"},{"name":"Session-disjoint","values":[0.0,0.1324],"fill":"#D97706"}],"axes":{"value":{"minimum":0,"maximum":1,"major_unit":0.2}},"show_legend":true,"legend_position":"bottom","data_labels":{"show_value":true,"number_format":"0.0000"},"notes":["Paper architecture · F1 at paper-selected windows","0.5","0.0"]}]]></metadata>
+    <rect x="100" y="184" width="760" height="404" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="132" y="220" font-size="18" font-weight="bold" fill="#14324B">Paper architecture · F1 at paper-selected windows</text>
+    <line id="grid-100" x1="162" y1="252" x2="800" y2="252" stroke="#C9D3DC"/><line id="grid-050" x1="162" y1="388" x2="800" y2="388" stroke="#C9D3DC"/><line id="axis-x" x1="162" y1="524" x2="800" y2="524" stroke="#14324B" stroke-width="2"/>
+    <text x="152" y="258" text-anchor="end" font-size="14" fill="#5B6875">1.0</text><text x="152" y="394" text-anchor="end" font-size="14" fill="#5B6875">0.5</text><text x="152" y="530" text-anchor="end" font-size="14" fill="#5B6875">0.0</text>
+    <rect x="246" y="257.9" width="82" height="266.1" fill="#14324B"/><rect x="338" y="524" width="82" height="0" fill="#D97706"/>
+    <rect x="548" y="268.2" width="82" height="255.8" fill="#14324B"/><rect x="640" y="488" width="82" height="36" fill="#D97706"/>
+    <text x="287" y="246" text-anchor="middle" font-family="Consolas" font-size="14" fill="#14324B">0.9784</text><text x="379" y="510" text-anchor="middle" font-family="Consolas" font-size="14" fill="#D97706">0.0000</text>
+    <text x="589" y="256" text-anchor="middle" font-family="Consolas" font-size="14" fill="#14324B">0.9405</text><text x="681" y="476" text-anchor="middle" font-family="Consolas" font-size="14" fill="#D97706">0.1324</text>
+    <text x="333" y="552" text-anchor="middle" font-size="16" fill="#172033">Layer 1 · l=6</text><text x="635" y="552" text-anchor="middle" font-size="16" fill="#172033">Layer 2 · l=3</text>
+    <rect x="234" y="566" width="14" height="10" fill="#14324B"/><text x="256" y="578" font-size="14" fill="#172033">Flow-random</text>
+    <rect x="490" y="566" width="14" height="10" fill="#D97706"/><text x="512" y="578" font-size="14" fill="#172033">Session-disjoint</text>
+  </g>
+  <g id="leakage-explanation" data-pptx-bounds="900 184 280 404">
+    <rect x="900" y="184" width="280" height="404" rx="10" fill="#FFF7ED" stroke="#D97706" stroke-width="2"/>
+    <!-- icon: tabler-outline/alert-triangle -->
+  <g transform="translate(930, 218) scale(1.91667)" fill="none" stroke="#D97706" stroke-width="2">
+    <path d="M12 9v4" />
+    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" />
+    <path d="M12 16h.01" />
+  </g>
+    <text x="930" y="302" font-size="24" font-weight="bold" fill="#14324B">What changed?</text>
+    <text x="930" y="344" font-size="18" fill="#172033">Random split can place</text><text x="930" y="370" font-size="18" fill="#172033">flows from one capture</text><text x="930" y="396" font-size="18" fill="#172033">session on both sides.</text>
+    <line x1="930" y1="430" x2="1150" y2="430" stroke="#D97706"/>
+    <text x="930" y="468" font-size="18" fill="#172033">Group-disjoint split forces</text><text x="930" y="494" font-size="18" fill="#172033">unseen-session transfer.</text>
+    <text x="930" y="548" font-size="16" font-weight="bold" fill="#B42318">Protocol—not architecture—</text><text x="930" y="570" font-size="16" font-weight="bold" fill="#B42318">explains the collapse.</text>
+  </g>
+  <g id="takeaway" data-pptx-bounds="100 608 1080 36"><text x="100" y="634" font-size="22" font-weight="bold" fill="#172033">High random-split accuracy is not evidence of deployment generalization.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Source: reports/paper_comparison/leakage_audit.csv</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">10</text></g>
+</svg>

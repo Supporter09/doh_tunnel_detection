@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#0E7490"/></marker></defs>
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/>
+  <rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">02 · ORIGINAL METHOD</text><text x="100" y="132" font-family="Aptos Display" font-size="42" font-weight="bold" fill="#14324B">A two-layer decision system</text></g>
+  <g id="pipeline" data-pptx-bounds="100 188 640 382">
+    <rect x="100" y="188" width="640" height="382" rx="12" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <use data-icon="tabler-outline/network" x="138" y="228" width="46" height="46" fill="#0E7490"/>
+    <text x="204" y="258" font-size="26" font-weight="bold" fill="#14324B">Encrypted traffic flow</text>
+    <line x1="286" y1="290" x2="286" y2="334" stroke="#0E7490" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="142" y="344" width="288" height="76" rx="8" fill="#EAF0F5"/>
+    <text x="166" y="375" font-size="18" fill="#5B6875">LAYER 1</text><text x="166" y="405" font-size="24" font-weight="bold" fill="#14324B">DoH vs non-DoH</text>
+    <line x1="430" y1="382" x2="488" y2="382" stroke="#0E7490" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="500" y="344" width="196" height="76" rx="8" fill="#DDF4F2"/>
+    <text x="522" y="375" font-size="18" fill="#0E7490">NON-DOH</text><text x="522" y="405" font-size="20" fill="#172033">Stop</text>
+    <line x1="286" y1="420" x2="286" y2="464" stroke="#0E7490" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="142" y="476" width="288" height="76" rx="8" fill="#14324B"/>
+    <text x="166" y="507" font-size="18" fill="#C9EAF0">LAYER 2</text><text x="166" y="537" font-size="24" font-weight="bold" fill="#FFFFFF">Benign vs malicious</text>
+  </g>
+  <g id="paper-figure" data-pptx-bounds="790 188 390 382">
+    <rect x="790" y="188" width="390" height="382" rx="12" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <image href="../images/NetworkData2_p3_2.jpeg" x="814" y="214" width="342" height="284" preserveAspectRatio="xMidYMid meet"/>
+    <text x="814" y="531" font-size="18" font-weight="bold" fill="#14324B">Original paper architecture</text>
+    <text x="814" y="557" font-size="14" fill="#5B6875">Figure reproduced without crop</text>
+  </g>
+  <g id="takeaway" data-pptx-bounds="100 600 1080 44"><text x="100" y="632" font-size="24" fill="#172033">Each layer is evaluated independently across statistical and sequence models.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Source: original paper, architecture figure</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">03</text></g>
+</svg>

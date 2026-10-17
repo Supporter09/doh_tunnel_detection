@@ -1,0 +1,9 @@
+Layer,Evaluation Paradigm,Model Name,Provenance,Split Protocol,Window (l),Precision,Recall,F1-Score,Detection Delay (Median),Detection Delay (Mean),Status
+Layer 1 (DoH vs Non-DoH),Statistical Flow Summary (28/29 Features),Paper Random Forest (Table III),[Paper-Reported],Stratified Random Flow Split (80/20),N/A,0.993,0.993,0.993,1.397 s,20.393 s,published
+Layer 1 (DoH vs Non-DoH),Statistical Flow Summary (28/29 Features),Project Random Forest (Tabular),[Project-Observed],Stratified Random Flow Split (80/20),N/A,unavailable,unavailable,0.9965,< 0.005 ms,unavailable,observed
+Layer 1 (DoH vs Non-DoH),Time-Series Packet Clumps (5-tuple Clumps),Paper 4-Layer LSTM (Table V),[Paper-Reported],Stratified Random Flow Split (80/20),6,0.993,0.993,0.993,0.047 s,0.574 s,published
+Layer 1 (DoH vs Non-DoH),Time-Series Packet Clumps (5-tuple Clumps),Project paper_v4,[Project-Replication],session_scenario_disjoint,6,0.0000,0.0000,0.0000,unavailable,unavailable,completed
+Layer 2 (Benign DoH vs Malicious DoH),Statistical Flow Summary (28/29 Features),Paper Random Forest (Table IV),[Paper-Reported],Stratified Random Flow Split (80/20),N/A,0.999,0.999,0.999,34.064 s,53.924 s,published
+Layer 2 (Benign DoH vs Malicious DoH),Statistical Flow Summary (28/29 Features),Project Random Forest (Tabular),[Project-Observed],Stratified Random Flow Split (80/20),N/A,unavailable,unavailable,0.9997,< 0.005 ms,unavailable,observed
+Layer 2 (Benign DoH vs Malicious DoH),Time-Series Packet Clumps (5-tuple Clumps),Paper 4-Layer LSTM (Table VI),[Paper-Reported],Stratified Random Flow Split (80/20),3,0.991,0.991,0.991,0.050 s,0.502 s,published
+Layer 2 (Benign DoH vs Malicious DoH),Time-Series Packet Clumps (5-tuple Clumps),Project paper_v4,[Project-Replication],session_scenario_disjoint,3,1.0000,0.0709,0.1324,unavailable,unavailable,completed

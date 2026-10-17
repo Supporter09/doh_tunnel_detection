@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/><rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">07 · PAPER TIME-SERIES RESULTS</text><text x="100" y="132" font-family="Aptos Display" font-size="42" font-weight="bold" fill="#14324B">A few clumps recover most discriminative signal</text></g>
+  <!-- chart-plot-area: object=paper-window-sweep | 160,250,864,520 -->
+  <g id="paper-window-sweep" data-pptx-replace-with="chart" data-pptx-bounds="100 186 820 402" data-pptx-fallback-sha256="34972500f03bebab4a44ff835c5839bf26143c1c3c418c1c8186b01f2b4ecc8d">
+    <metadata type="application/json"><![CDATA[{"x":100,"y":186,"width":820,"height":402,"name":"paper-window-sweep","type":"line","line_style":"lineMarker","categories":["1","2","3","4","5","6","7","8","9","10"],"series":[{"name":"Layer 1","values":[0.876,0.949,0.951,0.983,0.987,0.993,0.996,0.996,0.998,0.998]},{"name":"Layer 2","values":[0.782,0.985,0.991,0.995,0.997,0.998,0.997,0.999,0.999,0.999]}],"style":{"colors":["#14324B","#D97706"]},"axes":{"value":{"minimum":0.75,"maximum":1.0,"major_unit":0.05}},"show_legend":true,"legend_position":"bottom","notes":["F1 by number of observed clumps","1.00","0.90","0.80"]}]]></metadata>
+    <rect x="100" y="186" width="820" height="402" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="132" y="220" font-size="18" font-weight="bold" fill="#14324B">F1 by number of observed clumps</text>
+    <line id="grid-100" x1="160" y1="250" x2="864" y2="250" stroke="#C9D3DC"/><line id="grid-090" x1="160" y1="358" x2="864" y2="358" stroke="#C9D3DC"/><line id="grid-080" x1="160" y1="466" x2="864" y2="466" stroke="#C9D3DC"/><line id="axis-x" x1="160" y1="520" x2="864" y2="520" stroke="#14324B" stroke-width="2"/>
+    <text x="150" y="256" text-anchor="end" font-size="14" fill="#5B6875">1.00</text><text x="150" y="364" text-anchor="end" font-size="14" fill="#5B6875">0.90</text><text x="150" y="472" text-anchor="end" font-size="14" fill="#5B6875">0.80</text>
+    <polyline points="195.2,383.9 265.6,305.1 336.0,302.9 406.4,268.4 476.8,264.0 547.2,257.6 617.6,254.3 688.0,254.3 758.4,252.2 828.8,252.2" fill="none" stroke="#14324B" stroke-width="4"/>
+    <polyline points="195.2,485.4 265.6,266.2 336.0,259.7 406.4,255.4 476.8,253.2 547.2,252.2 617.6,253.2 688.0,251.1 758.4,251.1 828.8,251.1" fill="none" stroke="#D97706" stroke-width="4"/>
+    <g fill="#14324B"><circle cx="195.2" cy="383.9" r="5"/><circle cx="265.6" cy="305.1" r="5"/><circle cx="336.0" cy="302.9" r="5"/><circle cx="406.4" cy="268.4" r="5"/><circle cx="476.8" cy="264.0" r="5"/><circle cx="547.2" cy="257.6" r="7"/><circle cx="617.6" cy="254.3" r="5"/><circle cx="688.0" cy="254.3" r="5"/><circle cx="758.4" cy="252.2" r="5"/><circle cx="828.8" cy="252.2" r="5"/></g>
+    <g fill="#D97706"><circle cx="195.2" cy="485.4" r="5"/><circle cx="265.6" cy="266.2" r="5"/><circle cx="336.0" cy="259.7" r="7"/><circle cx="406.4" cy="255.4" r="5"/><circle cx="476.8" cy="253.2" r="5"/><circle cx="547.2" cy="252.2" r="5"/><circle cx="617.6" cy="253.2" r="5"/><circle cx="688.0" cy="251.1" r="5"/><circle cx="758.4" cy="251.1" r="5"/><circle cx="828.8" cy="251.1" r="5"/></g>
+    <text x="170" y="548" text-anchor="middle" font-size="14" fill="#5B6875">1</text><text x="322" y="548" text-anchor="middle" font-size="14" fill="#5B6875">3</text><text x="550" y="548" text-anchor="middle" font-size="14" fill="#5B6875">6</text><text x="854" y="548" text-anchor="middle" font-size="14" fill="#5B6875">10</text>
+    <line x1="330" y1="574" x2="354" y2="574" stroke="#14324B" stroke-width="4"/><text x="364" y="579" font-size="14" fill="#172033">Layer 1</text>
+    <line x1="510" y1="574" x2="534" y2="574" stroke="#D97706" stroke-width="4"/><text x="544" y="579" font-size="14" fill="#172033">Layer 2</text>
+  </g>
+  <g id="latency-callouts" data-pptx-bounds="958 186 222 402">
+    <rect x="958" y="186" width="222" height="402" rx="10" fill="#14324B"/>
+    <!-- icon: tabler-outline/clock -->
+  <g transform="translate(990, 220) scale(1.75)" fill="none" stroke="#FFFFFF" stroke-width="2">
+    <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+    <path d="M12 7v5l3 3" />
+  </g>
+    <text x="990" y="306" font-family="Consolas" font-size="42" font-weight="bold" fill="#FFFFFF">0.574 s</text><text x="990" y="336" font-size="16" fill="#C9EAF0">L1 mean · l=6</text>
+    <line x1="990" y1="372" x2="1148" y2="372" stroke="#5B6875"/>
+    <text x="990" y="430" font-family="Consolas" font-size="42" font-weight="bold" fill="#FFFFFF">0.502 s</text><text x="990" y="460" font-size="16" fill="#C9EAF0">L2 mean · l=3</text>
+    <text x="990" y="526" font-size="16" fill="#FFFFFF">Paper-selected points</text><text x="990" y="552" font-size="16" fill="#FFFFFF">≈99% F1</text>
+  </g>
+  <g id="takeaway" data-pptx-bounds="100 608 1080 36"><text x="100" y="634" font-size="22" font-weight="bold" fill="#172033">Paper claim: early sequence decisions can replace full-flow waiting.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Source: Paper Tables V–VI; paper-reported timing</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">08</text></g>
+</svg>

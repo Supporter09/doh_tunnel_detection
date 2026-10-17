@@ -1,0 +1,1 @@
+At the paper-selected windows, the replicated paper architecture scores 0.9784 and 0.9405 F1 under flow-random splits. Under session-disjoint evaluation, those values fall to zero and 0.1324. This collapse demonstrates that random flow accuracy cannot be interpreted as unseen-session generalization.

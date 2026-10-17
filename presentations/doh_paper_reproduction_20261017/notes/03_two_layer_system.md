@@ -1,0 +1,1 @@
+The first layer separates DoH from ordinary HTTPS traffic. Only traffic classified as DoH proceeds to the second layer, which separates benign DoH from malicious tunnels. We reproduce these two decisions independently so that each result has a clear task definition and evidence boundary.

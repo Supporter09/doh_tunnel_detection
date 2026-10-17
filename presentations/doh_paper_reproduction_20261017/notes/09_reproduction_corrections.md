@@ -1,0 +1,1 @@
+We corrected the printed clump termination condition and added a bounds check before packet indexing. We also pinned optimizer settings, seeds, manifests, and the source snapshot. Most importantly, we added a session-and-scenario group-disjoint split and a mask-aware BiGRU with attention as the improved sequence model.

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/><rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">04 · DATASET</text><text x="100" y="132" font-family="Aptos Display" font-size="36" font-weight="bold" fill="#14324B">CIRA-CIC-DoHBrw-2020 provides both tables and packets</text></g>
+  <g id="capture-image" data-pptx-bounds="100 182 520 386">
+    <rect x="100" y="182" width="520" height="386" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <image href="../images/NetworkData2_p5_5.jpeg" x="122" y="204" width="476" height="292" preserveAspectRatio="xMidYMid meet"/>
+    <text x="122" y="530" font-size="18" font-weight="bold" fill="#14324B">Original capture environment</text>
+    <text x="122" y="555" font-size="14" fill="#5B6875">Paper figure · no crop</text>
+  </g>
+  <g id="dataset-inventory" data-pptx-bounds="664 182 516 386">
+    <rect x="664" y="182" width="516" height="386" rx="10" fill="#EAF0F5"/>
+    <use data-icon="tabler-outline/database" x="700" y="218" width="50" height="50" fill="#0E7490"/>
+    <text x="774" y="250" font-size="28" font-weight="bold" fill="#14324B">Three traffic classes</text>
+    <rect x="700" y="304" width="444" height="58" rx="6" fill="#FFFFFF"/><circle cx="724" cy="333" r="8" fill="#5B6875"/><text x="748" y="341" font-size="23" fill="#172033">Non-DoH HTTPS</text>
+    <rect x="700" y="378" width="444" height="58" rx="6" fill="#FFFFFF"/><circle cx="724" cy="407" r="8" fill="#0E7490"/><text x="748" y="415" font-size="23" fill="#172033">Benign DoH</text>
+    <rect x="700" y="452" width="444" height="58" rx="6" fill="#FFFFFF"/><circle cx="724" cy="481" r="8" fill="#D97706"/><text x="748" y="489" font-size="23" fill="#172033">Malicious DoH tunnels</text>
+    <text x="700" y="536" font-size="16" fill="#5B6875">CSV supports statistical replication;<tspan x="700" dy="22">PCAP enables sequence reconstruction.</tspan></text>
+  </g>
+  <g id="data-path" data-pptx-bounds="100 594 1080 50"><text x="100" y="626" font-size="24" font-weight="bold" fill="#172033">Evidence path:</text><text x="258" y="626" font-size="24" fill="#172033">CSV baseline first → raw PCAP session-disjoint experiment.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Sources: original paper; project manifests and raw-PCAP experiment audit</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">05</text></g>
+</svg>

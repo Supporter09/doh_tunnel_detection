@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/><rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">08 · REPRODUCTION CORRECTIONS</text><text x="100" y="132" font-family="Aptos Display" font-size="30" font-weight="bold" fill="#14324B">Reproducibility required fixing method and protocol gaps</text></g>
+  <g id="correction-ledger" data-pptx-bounds="100 184 1080 402">
+    <rect x="100" y="184" width="1080" height="402" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <rect x="100" y="184" width="1080" height="58" rx="10" fill="#14324B"/>
+    <text x="132" y="221" font-size="18" font-weight="bold" fill="#FFFFFF">PAPER GAP / RISK</text><text x="666" y="221" font-size="18" font-weight="bold" fill="#C9EAF0">PROJECT CORRECTION</text>
+    <line x1="640" y1="242" x2="640" y2="586" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="132" y="286" font-size="20" fill="#172033">Printed clump termination inversion</text><text x="666" y="286" font-size="20" fill="#172033">Stop on direction change or timeout</text>
+    <line x1="124" y1="314" x2="1156" y2="314" stroke="#EAF0F5" stroke-width="2"/>
+    <text x="132" y="360" font-size="20" fill="#172033">Out-of-bounds access after increment</text><text x="666" y="360" font-size="20" fill="#172033">Bounds check before packet indexing</text>
+    <line x1="124" y1="388" x2="1156" y2="388" stroke="#EAF0F5" stroke-width="2"/>
+    <text x="132" y="434" font-size="20" fill="#172033">Unspecified optimizer and seeds</text><text x="666" y="434" font-size="20" fill="#172033">Pinned configs, seed 42, immutable manifests</text>
+    <line x1="124" y1="462" x2="1156" y2="462" stroke="#EAF0F5" stroke-width="2"/>
+    <text x="132" y="508" font-size="20" fill="#172033">Flow-random train/test correlation</text><text x="666" y="508" font-size="20" fill="#172033">Session/scenario group-disjoint split</text>
+    <text x="132" y="558" font-family="Consolas" font-size="16" fill="#5B6875">baseline: Dense(10) → LSTM(8×4) → Dense(1)</text><text x="666" y="558" font-family="Consolas" font-size="16" fill="#0E7490">improved: mask → BiGRU → attention → classifier</text>
+  </g>
+  <g id="verification" data-pptx-bounds="100 608 1080 36"><!-- icon: tabler-outline/check -->
+  <g transform="translate(100, 604) scale(1.41667)" fill="none" stroke="#15803D" stroke-width="2">
+    <path d="M5 12l5 5l10 -10" />
+  </g><text x="150" y="632" font-size="22" font-weight="bold" fill="#172033">All corrections are encoded in code, manifests, and regression tests.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Sources: paper Algorithm 1; project methodology and experiment manifest</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">09</text></g>
+</svg>

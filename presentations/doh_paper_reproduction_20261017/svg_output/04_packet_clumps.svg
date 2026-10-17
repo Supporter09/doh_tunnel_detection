@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L0 6 L9 3 z" fill="#0E7490"/></marker></defs>
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/><rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">03 · CORE CONCEPT</text><text x="100" y="132" font-family="Aptos Display" font-size="42" font-weight="bold" fill="#14324B">Packet clumps convert traffic into a sequence</text></g>
+  <g id="packet-stream" data-pptx-bounds="100 186 1080 152">
+    <text x="100" y="214" font-size="18" font-weight="bold" fill="#5B6875">ORDERED PACKETS</text>
+    <line x1="126" y1="276" x2="1132" y2="276" stroke="#0E7490" stroke-width="3" marker-end="url(#arr)"/>
+    <g fill="#0E7490"><circle cx="170" cy="276" r="18"/><circle cx="230" cy="276" r="26"/><circle cx="305" cy="276" r="14"/><circle cx="455" cy="276" r="31"/><circle cx="530" cy="276" r="19"/><circle cx="810" cy="276" r="28"/><circle cx="880" cy="276" r="16"/></g>
+    <g fill="#D97706"><circle cx="378" cy="276" r="22"/><circle cx="620" cy="276" r="30"/><circle cx="700" cy="276" r="17"/><circle cx="974" cy="276" r="24"/><circle cx="1050" cy="276" r="31"/></g>
+    <text x="156" y="325" font-size="14" fill="#0E7490">client → resolver</text><text x="930" y="325" font-size="14" fill="#D97706">resolver → client</text>
+  </g>
+  <g id="clump-rule" data-pptx-bounds="100 360 510 222">
+    <rect x="100" y="360" width="510" height="222" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="132" y="406" font-size="24" font-weight="bold" fill="#14324B">A clump groups consecutive packets</text>
+    <text x="132" y="451" font-size="20" fill="#172033">same direction · bounded by direction change</text>
+    <text x="132" y="504" font-family="Consolas" font-size="22" fill="#0E7490">cᵢ = (direction, lengths, timing)</text>
+    <text x="132" y="548" font-size="18" fill="#5B6875">The first N clumps define the model window.</text>
+  </g>
+  <g id="sequence-model" data-pptx-bounds="650 360 530 222">
+    <rect x="650" y="360" width="530" height="222" rx="10" fill="#14324B"/>
+    <use data-icon="tabler-outline/brain" x="686" y="400" width="52" height="52" fill="#FFFFFF"/>
+    <text x="762" y="426" font-size="28" font-weight="bold" fill="#FFFFFF">Sequence model</text>
+    <text x="686" y="490" font-family="Consolas" font-size="24" fill="#C9EAF0">[c₁, c₂, …, cₙ] → label</text>
+    <text x="686" y="538" font-size="18" fill="#FFFFFF">Longer windows trade latency for context.</text>
+  </g>
+  <g id="takeaway" data-pptx-bounds="100 606 1080 38"><text x="100" y="634" font-size="22" font-weight="bold" fill="#172033">This representation preserves order while avoiding payload inspection.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Source: original paper, packet-clump methodology</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">04</text></g>
+</svg>

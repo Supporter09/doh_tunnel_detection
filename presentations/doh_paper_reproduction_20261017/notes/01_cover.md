@@ -1,0 +1,1 @@
+This project reproduces the two-layer DoH tunnel detector and then evaluates a mask-aware bidirectional GRU under a stricter protocol. In the capped, session-disjoint experiment, best-window F1 improves by 4.73 percentage points on layer one and 4.40 points on layer two. These are bounded comparative results, not a claim of full-dataset convergence.

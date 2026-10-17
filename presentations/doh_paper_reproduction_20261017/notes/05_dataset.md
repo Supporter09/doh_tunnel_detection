@@ -1,0 +1,1 @@
+The benchmark contains non-DoH HTTPS, benign DoH, and malicious DoH tunnel traffic. Published CSV features support the statistical replication, while raw PCAP files are required to reconstruct packet-clump sequences. Our evidence path therefore starts with the tabular baseline and then moves to a raw-PCAP session-disjoint experiment.

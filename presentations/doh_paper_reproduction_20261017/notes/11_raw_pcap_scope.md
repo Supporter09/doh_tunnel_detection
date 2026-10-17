@@ -1,0 +1,1 @@
+The audit covers 13,754 capture sources, 13,150 session groups, and about 97.1 gigabytes of uncompressed evidence. It processes 201,321 flows and retains 1,325: five hundred non-DoH, 325 benign DoH, and five hundred malicious DoH. The cap of twenty-five flows per capture controls runtime, so these results remain comparative rather than converged full-data estimates.

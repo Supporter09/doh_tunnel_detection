@@ -1,0 +1,1 @@
+The paper’s LSTM improves rapidly as the model observes more clumps. Its selected operating points reach 0.993 F1 for layer one at six clumps and 0.991 for layer two at three clumps. The reported mean detection delays are 0.574 and 0.502 seconds, supporting the early-detection argument relative to waiting for full flows.

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/><rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">06 · STATISTICAL RESULTS</text><text x="100" y="132" font-family="Aptos Display" font-size="42" font-weight="bold" fill="#14324B">Flow-summary models reproduce near-perfect F1</text></g>
+  <!-- chart-plot-area: object=statistical-f1 | 160,258,804,520 -->
+  <g id="statistical-f1" data-pptx-replace-with="chart" data-pptx-bounds="100 188 760 390" data-pptx-fallback-sha256="a510e7b7dc0612c8bf31cac7a766beee2485f5df234105006a043191874370be">
+    <metadata type="application/json"><![CDATA[{"x":100,"y":188,"width":760,"height":390,"name":"statistical-f1","type":"column","categories":["Layer 1","Layer 2"],"series":[{"name":"Paper RF","values":[0.993,0.999],"fill":"#14324B"},{"name":"Project RF","values":[0.9965,0.9997],"fill":"#0E7490"}],"axes":{"value":{"minimum":0.98,"maximum":1.0,"major_unit":0.005}},"show_legend":true,"legend_position":"bottom","data_labels":{"show_value":true,"number_format":"0.0000"},"notes":["F1 score · higher is better","1.000","0.990","0.980"]}]]></metadata>
+    <rect x="100" y="188" width="760" height="390" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="132" y="224" font-size="18" font-weight="bold" fill="#14324B">F1 score · higher is better</text>
+    <line id="grid-100" x1="160" y1="258" x2="804" y2="258" stroke="#C9D3DC"/><line id="grid-099" x1="160" y1="360" x2="804" y2="360" stroke="#C9D3DC"/><line id="axis-x" x1="160" y1="520" x2="804" y2="520" stroke="#14324B" stroke-width="2"/>
+    <text x="150" y="264" text-anchor="end" font-size="14" fill="#5B6875">1.000</text><text x="150" y="366" text-anchor="end" font-size="14" fill="#5B6875">0.990</text><text x="150" y="524" text-anchor="end" font-size="14" fill="#5B6875">0.980</text>
+    <rect x="248" y="349.7" width="78" height="170.3" fill="#14324B"/><rect x="334" y="303.8" width="78" height="216.2" fill="#0E7490"/>
+    <rect x="550" y="271.1" width="78" height="248.9" fill="#14324B"/><rect x="636" y="261.9" width="78" height="258.1" fill="#0E7490"/>
+    <text x="287" y="338" text-anchor="middle" font-family="Consolas" font-size="14" fill="#14324B">0.9930</text><text x="373" y="292" text-anchor="middle" font-family="Consolas" font-size="14" fill="#0E7490">0.9965</text>
+    <text x="589" y="259" text-anchor="middle" font-family="Consolas" font-size="14" fill="#14324B">0.9990</text><text x="675" y="250" text-anchor="middle" font-family="Consolas" font-size="14" fill="#0E7490">0.9997</text>
+    <text x="330" y="548" text-anchor="middle" font-size="16" fill="#172033">Layer 1</text><text x="632" y="548" text-anchor="middle" font-size="16" fill="#172033">Layer 2</text>
+    <rect x="250" y="562" width="14" height="10" fill="#14324B"/><text x="272" y="573" font-size="14" fill="#172033">Paper RF</text>
+    <rect x="430" y="562" width="14" height="10" fill="#0E7490"/><text x="452" y="573" font-size="14" fill="#172033">Project RF</text>
+  </g>
+  <g id="interpretation" data-pptx-bounds="900 188 280 390">
+    <rect x="900" y="188" width="280" height="390" rx="10" fill="#14324B"/>
+    <text x="930" y="238" font-size="18" fill="#C9EAF0">PROJECT RF</text>
+    <text x="930" y="306" font-family="Consolas" font-size="42" font-weight="bold" fill="#FFFFFF">0.9965</text><text x="930" y="336" font-size="18" fill="#FFFFFF">Layer 1 F1</text>
+    <text x="930" y="414" font-family="Consolas" font-size="42" font-weight="bold" fill="#FFFFFF">0.9997</text><text x="930" y="444" font-size="18" fill="#FFFFFF">Layer 2 F1</text>
+    <line x1="930" y1="480" x2="1150" y2="480" stroke="#5B6875"/>
+    <text x="930" y="518" font-size="16" fill="#C9EAF0">Same flow-random protocol</text><text x="930" y="544" font-size="16" fill="#C9EAF0">Same leakage caveat</text>
+  </g>
+  <g id="takeaway" data-pptx-bounds="100 606 1080 38"><text x="100" y="634" font-size="22" font-weight="bold" fill="#172033">Replication succeeded—but protocol realism remains unresolved.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Sources: Paper Tables III–IV; reports/paper_comparison/statistical_models.csv</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">07</text></g>
+</svg>

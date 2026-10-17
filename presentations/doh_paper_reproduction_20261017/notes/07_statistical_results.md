@@ -1,0 +1,1 @@
+The paper reports random-forest F1 of 0.993 for layer one and 0.999 for layer two. Our project random forest reaches 0.9965 and 0.9997 under the same flow-random paradigm. This reproduces the headline statistical performance, but it also inherits the same cross-session leakage risk.

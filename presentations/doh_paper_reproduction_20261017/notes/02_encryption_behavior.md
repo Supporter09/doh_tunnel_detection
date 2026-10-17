@@ -1,0 +1,1 @@
+DNS-over-HTTPS hides domain names, answers, and tunnel content inside TLS. It does not hide packet direction, packet length, timing, or burst structure. The paper’s central hypothesis is that these observable sequences remain discriminative without decrypting payloads.

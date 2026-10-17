@@ -1,0 +1,1 @@
+A packet clump groups consecutive packets moving in the same direction until direction changes or the timeout is exceeded. Each clump preserves direction, packet lengths, and timing, and the first N clumps form a model window. Increasing N adds behavioral context but also delays the decision.

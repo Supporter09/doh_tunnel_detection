@@ -1,0 +1,1 @@
+The statistical path waits for a completed flow, derives summary features, and evaluates classical and neural classifiers. The time-series path converts packet streams into directional clumps and sweeps LSTM windows from one through ten. The original work evaluates both paths with an eighty–twenty random split at flow level.

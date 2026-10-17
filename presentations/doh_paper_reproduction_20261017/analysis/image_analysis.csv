@@ -1,0 +1,10 @@
+No,Filename,Width,Height,AspectRatio,PixelAspectRatio,SourceDisplayRatio,RatioSource,Format,HasTransparentPixels,UsageCount,DisplayRatioVariants,AssetKind,SvgRenderable,PptxNativeSupported,SizeKB,Category
+1,NetworkData2_p1_0.jpeg,851,361,2.36,2.36,2.36,native,JPEG,False,1,,bitmap,True,True,51.2,Ultra-wide
+2,NetworkData2_p1_1.jpeg,851,361,2.36,2.36,2.36,native,JPEG,False,1,,bitmap,True,True,57.7,Ultra-wide
+3,NetworkData2_p3_2.jpeg,947,829,1.14,1.14,1.14,native,JPEG,False,1,,bitmap,True,True,78.3,Near square
+4,NetworkData2_p4_3.jpeg,670,341,1.96,1.96,1.96,native,JPEG,False,1,,bitmap,True,True,57.3,Wide landscape
+5,NetworkData2_p5_4.jpeg,1003,953,1.05,1.05,1.05,native,JPEG,False,1,,bitmap,True,True,42.4,Near square
+6,NetworkData2_p5_5.jpeg,403,1143,0.35,0.35,0.35,native,JPEG,False,1,,bitmap,True,True,32.5,Portrait
+7,NetworkData2_p7_6.png,888,596,1.49,1.49,1.49,native,PNG,False,1,,bitmap,True,True,13.7,Standard landscape
+8,NetworkData2_p7_7.png,888,593,1.50,1.50,1.50,native,PNG,False,1,,bitmap,True,True,13.5,Standard landscape
+9,NetworkData2_p7_8.jpeg,947,622,1.52,1.52,1.52,native,JPEG,False,1,,bitmap,True,True,45.2,Wide landscape

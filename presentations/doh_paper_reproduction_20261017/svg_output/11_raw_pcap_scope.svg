@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/><rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">10 · RAW-PCAP EXPERIMENT</text><text x="100" y="132" font-family="Aptos Display" font-size="30" font-weight="bold" fill="#14324B">The corrected run is broad—but intentionally capped</text></g>
+  <g id="capture-count" data-pptx-bounds="100 198 320 190"><text x="100" y="288" font-family="Consolas" font-size="68" font-weight="bold" fill="#0E7490">13,754</text><text x="104" y="330" font-size="22" font-weight="bold" fill="#14324B">capture sources audited</text><text x="104" y="360" font-size="16" fill="#5B6875">13,150 session groups</text></g>
+  <g id="byte-count" data-pptx-bounds="470 198 320 190"><text x="470" y="288" font-family="Consolas" font-size="68" font-weight="bold" fill="#0E7490">97.1 GB</text><text x="474" y="330" font-size="22" font-weight="bold" fill="#14324B">uncompressed evidence</text><text x="474" y="360" font-size="16" fill="#5B6875">one invalid PCAPNG skipped</text></g>
+  <g id="flow-count" data-pptx-bounds="840 198 340 190"><text x="840" y="288" font-family="Consolas" font-size="68" font-weight="bold" fill="#0E7490">201,321</text><text x="844" y="330" font-size="22" font-weight="bold" fill="#14324B">flows processed</text><text x="844" y="360" font-size="16" fill="#5B6875">1,325 retained for training</text></g>
+  <g id="class-ledger" data-pptx-bounds="100 430 1080 130">
+    <rect x="100" y="430" width="1080" height="130" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="132" y="474" font-size="18" fill="#5B6875">RETAINED CLASS BALANCE</text>
+    <text x="132" y="524" font-family="Consolas" font-size="28" font-weight="bold" fill="#14324B">500</text><text x="210" y="524" font-size="20" fill="#172033">non-DoH</text>
+    <text x="466" y="524" font-family="Consolas" font-size="28" font-weight="bold" fill="#0E7490">325</text><text x="544" y="524" font-size="20" fill="#172033">benign DoH</text>
+    <text x="820" y="524" font-family="Consolas" font-size="28" font-weight="bold" fill="#D97706">500</text><text x="898" y="524" font-size="20" fill="#172033">malicious DoH</text>
+  </g>
+  <g id="scope-warning" data-pptx-bounds="100 590 1080 54"><use data-icon="tabler-outline/microscope" x="100" y="588" width="38" height="38" fill="#D97706"/><text x="156" y="620" font-size="22" font-weight="bold" fill="#172033">25-flow-per-capture cap: comparative evidence, not full-data convergence.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Source: data/manifests/timeseries_comprehensive_experiment.json</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">11</text></g>
+</svg>

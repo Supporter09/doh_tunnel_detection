@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" data-pptx-page-role="content" font-family="Aptos, Arial">
+  <defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L0 6 L9 3 z" fill="#0E7490"/></marker></defs>
+  <rect id="background" data-pptx-role="background" width="1280" height="720" fill="#F7F9FC"/><rect id="ledger-rule" data-pptx-role="decoration" x="64" y="42" width="6" height="630" fill="#0E7490"/>
+  <g id="heading" data-pptx-bounds="100 48 1080 108"><text x="100" y="72" font-family="Consolas" font-size="16" fill="#0E7490" letter-spacing="2">05 · ORIGINAL PIPELINE</text><text x="100" y="132" font-family="Aptos Display" font-size="30" font-weight="bold" fill="#14324B">The paper evaluates two representations in parallel</text></g>
+  <g id="statistical-path" data-pptx-bounds="100 188 1080 164">
+    <rect x="100" y="188" width="1080" height="164" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="128" y="222" font-size="18" font-weight="bold" fill="#0E7490">STATISTICAL PATH</text>
+    <rect x="128" y="248" width="190" height="70" rx="7" fill="#EAF0F5"/><text x="223" y="290" text-anchor="middle" font-size="20" fill="#14324B">Completed flow</text>
+    <line x1="318" y1="283" x2="374" y2="283" stroke="#0E7490" stroke-width="3" marker-end="url(#arr)"/>
+    <rect x="386" y="248" width="240" height="70" rx="7" fill="#EAF0F5"/><text x="506" y="290" text-anchor="middle" font-size="20" fill="#14324B">28 summary features</text>
+    <line x1="626" y1="283" x2="682" y2="283" stroke="#0E7490" stroke-width="3" marker-end="url(#arr)"/>
+    <rect x="694" y="248" width="438" height="70" rx="7" fill="#14324B"/><text x="913" y="290" text-anchor="middle" font-size="20" fill="#FFFFFF">RF · C4.5 · SVM · NB · DNN · 2D CNN</text>
+  </g>
+  <g id="sequence-path" data-pptx-bounds="100 382 1080 164">
+    <rect x="100" y="382" width="1080" height="164" rx="10" fill="#FFFFFF" stroke="#C9D3DC" stroke-width="2"/>
+    <text x="128" y="416" font-size="18" font-weight="bold" fill="#D97706">TIME-SERIES PATH</text>
+    <rect x="128" y="442" width="190" height="70" rx="7" fill="#FFF7ED"/><text x="223" y="484" text-anchor="middle" font-size="20" fill="#14324B">Packet stream</text>
+    <line x1="318" y1="477" x2="374" y2="477" stroke="#0E7490" stroke-width="3" marker-end="url(#arr)"/>
+    <rect x="386" y="442" width="240" height="70" rx="7" fill="#FFF7ED"/><text x="506" y="484" text-anchor="middle" font-size="20" fill="#14324B">Directional clumps</text>
+    <line x1="626" y1="477" x2="682" y2="477" stroke="#0E7490" stroke-width="3" marker-end="url(#arr)"/>
+    <rect x="694" y="442" width="438" height="70" rx="7" fill="#14324B"/><text x="913" y="484" text-anchor="middle" font-size="20" fill="#FFFFFF">4-layer LSTM · windows 1…10</text>
+  </g>
+  <g id="split-rule" data-pptx-bounds="100 582 1080 60"><use data-icon="tabler-outline/arrows-split" x="100" y="586" width="40" height="40" fill="#D97706"/><text x="158" y="615" font-size="22" fill="#172033">Original evaluation: stratified 80/20 random split at flow level.</text></g>
+  <g id="footer" data-pptx-role="footer" data-pptx-bounds="100 662 1080 28"><text x="100" y="682" font-size="14" fill="#5B6875">Source: original paper, Sections IV–V</text><text x="1180" y="682" text-anchor="end" font-family="Consolas" font-size="14" fill="#5B6875">06</text></g>
+</svg>

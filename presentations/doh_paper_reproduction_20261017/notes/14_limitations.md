@@ -1,0 +1,1 @@
+Four limitations constrain interpretation. The per-capture cap limits convergence evidence, benign DoH availability stops at 325 retained flows, all traffic comes from one benchmark environment, and best windows are selected after the sweep. Larger caps, repeated seeds, confidence intervals, external datasets, and a locked holdout are the next required checks.

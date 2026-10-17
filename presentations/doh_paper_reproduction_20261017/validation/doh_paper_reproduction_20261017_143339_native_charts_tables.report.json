@@ -1,0 +1,439 @@
+{
+  "schema": "ppt-master.pptx-postflight-report.v1",
+  "status": "passed-with-warnings",
+  "output": {
+    "path": "/Users/charlie/Desktop/HUST/MalwareAnalysis/doh_tunnel_detection/presentations/doh_paper_reproduction_20261017/exports/doh_paper_reproduction_20261017_143339_native_charts_tables.pptx",
+    "bytes": 183476
+  },
+  "source": {
+    "svg_slide_count": 15,
+    "layout_definition_count": 0,
+    "fingerprint": {
+      "algorithm": "sha256",
+      "digest": "e75f6d4ad4e29367d024d8203a94abd30d5065328665c9b68d19eb4fe59b7287",
+      "file_count": 15,
+      "files": [
+        {
+          "file": "01_cover.svg",
+          "sha256": "6044a9f1cefdbb0dfc85db533c5be94eb9944e0f00691665b25830f965c1c2b4"
+        },
+        {
+          "file": "02_encryption_behavior.svg",
+          "sha256": "a4ed9362fdb724362bd05e3c576d0bbc1ce3f346b9ace3c0758c8f9230b732be"
+        },
+        {
+          "file": "03_two_layer_system.svg",
+          "sha256": "f5c4fa67dfc6a236ad9f09e8ab90ab8efc3665747bdcabe2860b4d09164e71de"
+        },
+        {
+          "file": "04_packet_clumps.svg",
+          "sha256": "4afed63761039bd021562a7d2ea7166156585e9eee76e78a3827ac05975192fc"
+        },
+        {
+          "file": "05_dataset.svg",
+          "sha256": "85b5a9cceba936c9af383f775515cc7dce3bc99f68b978dce5a59fa3aa4811f7"
+        },
+        {
+          "file": "06_original_pipeline.svg",
+          "sha256": "655fce3a1b797c00dcbb9d4976a2a76ecc24ab5057eac8519c4c7630e1296766"
+        },
+        {
+          "file": "07_statistical_results.svg",
+          "sha256": "fbdb199fc939364149e89bc10f7b81b8146ec067b083e0ea3da2a81e844b61ad"
+        },
+        {
+          "file": "08_timeseries_latency.svg",
+          "sha256": "66405691f79a54450bd9443099bf1bee9993f5c8dc0dc3c99121baa60cdfe91e"
+        },
+        {
+          "file": "09_reproduction_corrections.svg",
+          "sha256": "cf5d06a89523c633e3a9babf68261ebdd9cb02305dc2cd11b0b9693690a563c6"
+        },
+        {
+          "file": "10_leakage_gap.svg",
+          "sha256": "35fd72ce51c827ddfdf092c0fdc8b388a2cf924a08f750ad5cfc457f5bf6e947"
+        },
+        {
+          "file": "11_raw_pcap_scope.svg",
+          "sha256": "7b16da159d881b95a10bd5fb8aeb7ae2fb9ffbc6df46736c69067b96bc7e5318"
+        },
+        {
+          "file": "12_paper_window_results.svg",
+          "sha256": "38778bfbe875c14b8b38a203865dfc8bc1eca16dc6465e7eaccaa0aa5c8c844d"
+        },
+        {
+          "file": "13_bigru_improvement.svg",
+          "sha256": "f02fa8d92ce9cb18678ca73855ee1cb1cadfab38829c670be99a0670e27a6073"
+        },
+        {
+          "file": "14_limitations.svg",
+          "sha256": "83358d251153af321ec182638b6166938cbcc21c3bf617d86c6e182f7cc0ca6a"
+        },
+        {
+          "file": "15_conclusion.svg",
+          "sha256": "7cfdcc816950a6f9f48684f852a3efba0fedb439b97294eacdaaa509f0ab94b2"
+        }
+      ]
+    },
+    "authoring_roundtrip": null
+  },
+  "package": {
+    "zip_integrity": "passed",
+    "corrupt_member": null,
+    "slides": 15,
+    "notes": 15,
+    "masters": 1,
+    "layouts": 1
+  },
+  "checks": {
+    "zip_integrity": "passed",
+    "slide_count": "passed",
+    "internal_relationships": "enforced-at-build",
+    "structured_package": "not-applicable",
+    "transitions": "enforced-at-build",
+    "animations": "enforced-at-build",
+    "project_svg_contract": "enforced-at-build",
+    "compatibility_normalization": "not-applicable",
+    "authoring_roundtrip": "not-applicable",
+    "quality_gate": "passed",
+    "quality_warnings": "warning",
+    "template_tokens": "passed",
+    "external_images": "passed",
+    "font_portability": "warning"
+  },
+  "quality": {
+    "status": "loaded",
+    "path": "/Users/charlie/Desktop/HUST/MalwareAnalysis/doh_tunnel_detection/presentations/doh_paper_reproduction_20261017/validation/svg_quality_report.json",
+    "schema": "ppt-master.svg-quality-report.v1",
+    "stage": "final",
+    "source_match": "passed",
+    "source_fingerprint": {
+      "algorithm": "sha256",
+      "digest": "e75f6d4ad4e29367d024d8203a94abd30d5065328665c9b68d19eb4fe59b7287",
+      "file_count": 15,
+      "files": [
+        {
+          "file": "01_cover.svg",
+          "sha256": "6044a9f1cefdbb0dfc85db533c5be94eb9944e0f00691665b25830f965c1c2b4"
+        },
+        {
+          "file": "02_encryption_behavior.svg",
+          "sha256": "a4ed9362fdb724362bd05e3c576d0bbc1ce3f346b9ace3c0758c8f9230b732be"
+        },
+        {
+          "file": "03_two_layer_system.svg",
+          "sha256": "f5c4fa67dfc6a236ad9f09e8ab90ab8efc3665747bdcabe2860b4d09164e71de"
+        },
+        {
+          "file": "04_packet_clumps.svg",
+          "sha256": "4afed63761039bd021562a7d2ea7166156585e9eee76e78a3827ac05975192fc"
+        },
+        {
+          "file": "05_dataset.svg",
+          "sha256": "85b5a9cceba936c9af383f775515cc7dce3bc99f68b978dce5a59fa3aa4811f7"
+        },
+        {
+          "file": "06_original_pipeline.svg",
+          "sha256": "655fce3a1b797c00dcbb9d4976a2a76ecc24ab5057eac8519c4c7630e1296766"
+        },
+        {
+          "file": "07_statistical_results.svg",
+          "sha256": "fbdb199fc939364149e89bc10f7b81b8146ec067b083e0ea3da2a81e844b61ad"
+        },
+        {
+          "file": "08_timeseries_latency.svg",
+          "sha256": "66405691f79a54450bd9443099bf1bee9993f5c8dc0dc3c99121baa60cdfe91e"
+        },
+        {
+          "file": "09_reproduction_corrections.svg",
+          "sha256": "cf5d06a89523c633e3a9babf68261ebdd9cb02305dc2cd11b0b9693690a563c6"
+        },
+        {
+          "file": "10_leakage_gap.svg",
+          "sha256": "35fd72ce51c827ddfdf092c0fdc8b388a2cf924a08f750ad5cfc457f5bf6e947"
+        },
+        {
+          "file": "11_raw_pcap_scope.svg",
+          "sha256": "7b16da159d881b95a10bd5fb8aeb7ae2fb9ffbc6df46736c69067b96bc7e5318"
+        },
+        {
+          "file": "12_paper_window_results.svg",
+          "sha256": "38778bfbe875c14b8b38a203865dfc8bc1eca16dc6465e7eaccaa0aa5c8c844d"
+        },
+        {
+          "file": "13_bigru_improvement.svg",
+          "sha256": "f02fa8d92ce9cb18678ca73855ee1cb1cadfab38829c670be99a0670e27a6073"
+        },
+        {
+          "file": "14_limitations.svg",
+          "sha256": "83358d251153af321ec182638b6166938cbcc21c3bf617d86c6e182f7cc0ca6a"
+        },
+        {
+          "file": "15_conclusion.svg",
+          "sha256": "7cfdcc816950a6f9f48684f852a3efba0fedb439b97294eacdaaa509f0ab94b2"
+        }
+      ]
+    },
+    "summary": {
+      "total": 15,
+      "passed": 0,
+      "warnings": 15,
+      "errors": 0
+    },
+    "categories": {
+      "blocking": {
+        "count": 0,
+        "issues": []
+      },
+      "introduced": {
+        "count": 41,
+        "issues": [
+          {
+            "file": "01_cover.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[22]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "01_cover.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "01_cover.svg",
+            "message": "Detected 1 paragraph-like line run(s) split across sibling <text> elements (<g id=\"cover-heading\"> x=104.0, y=170.0..232.0, 2 lines). If each run is one prose paragraph, combine it into one <text>: keep its first line as direct text and use direct <tspan> children with the parent x and positive relative dy values for later lines. An all-<tspan> form may start with dy=\"0\". Keep semantically independent text frames separate."
+          },
+          {
+            "file": "02_encryption_behavior.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (12 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): takeaway:fill None -> '#172033'; takeaway:font-size None -> '28'; text[26]:fill '#172033' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "02_encryption_behavior.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "02_encryption_behavior.svg",
+            "message": "Detected 2 paragraph-like line run(s) split across sibling <text> elements (<g id=\"hidden-channel\"> x=140.0, y=354.0..440.0, 3 lines; <g id=\"visible-channel\"> x=690.0, y=354.0..440.0, 3 lines). If each run is one prose paragraph, combine it into one <text>: keep its first line as direct text and use direct <tspan> children with the parent x and positive relative dy values for later lines. An all-<tspan> form may start with dy=\"0\". Keep semantically independent text frames separate."
+          },
+          {
+            "file": "03_two_layer_system.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[34]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "03_two_layer_system.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "04_packet_clumps.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[44]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "04_packet_clumps.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "05_dataset.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (12 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): data-path:fill None -> '#172033'; data-path:font-size None -> '24'; text[28]:fill '#172033' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "05_dataset.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "05_dataset.svg",
+            "message": "<text> (x=100, y=132; text='CIRA-CIC-DoHBrw-2020…') exceeds <g id=\"heading\"> data-pptx-bounds on the horizontal axis: content (100.0, 101.4)-(1200.8, 144.6), container (100.0, 48.0)-(1180.0, 156.0), overflow horizontal 1.9%, vertical 0.0% (error above 5%); expand the root module bounds into available non-overlapping space; otherwise reflow the text; ≈22.9 px per Latin char at 36px incl. headroom; ≈47 chars fit in 1080 px"
+          },
+          {
+            "file": "06_original_pipeline.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[36]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "06_original_pipeline.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "07_statistical_results.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[44]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "07_statistical_results.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "07_statistical_results.svg",
+            "message": "<text> (x=100, y=132; text='Flow-summary models …') exceeds <g id=\"heading\"> data-pptx-bounds on the horizontal axis: content (100.0, 96.3)-(1227.6, 146.7), container (100.0, 48.0)-(1180.0, 156.0), overflow horizontal 4.4%, vertical 0.0% (error above 5%); expand the root module bounds into available non-overlapping space; otherwise reflow the text; ≈27.5 px per Latin char at 42px incl. headroom; ≈39 chars fit in 1080 px"
+          },
+          {
+            "file": "07_statistical_results.svg",
+            "message": "Detected 1 paragraph-like line run(s) split across sibling <text> elements (<g id=\"interpretation\"> x=930.0, y=518.0..544.0, 2 lines). If each run is one prose paragraph, combine it into one <text>: keep its first line as direct text and use direct <tspan> children with the parent x and positive relative dy values for later lines. An all-<tspan> form may start with dy=\"0\". Keep semantically independent text frames separate."
+          },
+          {
+            "file": "08_timeseries_latency.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[63]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "08_timeseries_latency.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "08_timeseries_latency.svg",
+            "message": "<text> (x=100, y=132; text='A few clumps recover…') exceeds <g id=\"heading\"> data-pptx-bounds on the horizontal axis: content (100.0, 96.3)-(1195.4, 146.7), container (100.0, 48.0)-(1180.0, 156.0), overflow horizontal 1.4%, vertical 0.0% (error above 5%); expand the root module bounds into available non-overlapping space; otherwise reflow the text; ≈26.7 px per Latin char at 42px incl. headroom; ≈40 chars fit in 1080 px"
+          },
+          {
+            "file": "08_timeseries_latency.svg",
+            "message": "Detected 1 paragraph-like line run(s) split across sibling <text> elements (<g id=\"latency-callouts\"> x=990.0, y=526.0..552.0, 2 lines). If each run is one prose paragraph, combine it into one <text>: keep its first line as direct text and use direct <tspan> children with the parent x and positive relative dy values for later lines. An all-<tspan> form may start with dy=\"0\". Keep semantically independent text frames separate."
+          },
+          {
+            "file": "09_reproduction_corrections.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[30]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "09_reproduction_corrections.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "10_leakage_gap.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[46]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "10_leakage_gap.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "10_leakage_gap.svg",
+            "message": "Detected 3 paragraph-like line run(s) split across sibling <text> elements (<g id=\"leakage-explanation\"> x=930.0, y=344.0..396.0, 3 lines; <g id=\"leakage-explanation\"> x=930.0, y=468.0..494.0, 2 lines; <g id=\"leakage-explanation\"> x=930.0, y=548.0..570.0, 2 lines). If each run is one prose paragraph, combine it into one <text>: keep its first line as direct text and use direct <tspan> children with the parent x and positive relative dy values for later lines. An all-<tspan> form may start with dy=\"0\". Keep semantically independent text frames separate."
+          },
+          {
+            "file": "11_raw_pcap_scope.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[32]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "11_raw_pcap_scope.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "12_paper_window_results.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[64]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "12_paper_window_results.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "13_bigru_improvement.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[43]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "13_bigru_improvement.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "14_limitations.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[31]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "14_limitations.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "15_conclusion.svg",
+            "message": "Noncanonical compact authoring: Authoring SVG contains noncanonical or redundant inherited style declarations (6 change(s)); examples (group:attr None -> value hoists the shared value onto that group; child:attr value -> None drops the copy the child now inherits): footer:fill None -> '#5B6875'; footer:font-size None -> '14'; text[28]:fill '#5B6875' -> None (advisory; normalize with `python3 scripts/compact_svg_styles.py <svg_output> --inplace`, re-stamp pages that carry Chart/Table fallbacks, and rerun the final gate, or leave the explicit form)"
+          },
+          {
+            "file": "15_conclusion.svg",
+            "message": "Font stack exports non-PPT-safe typeface(s) to PPTX (latin=Aptos): Aptos, Arial"
+          },
+          {
+            "file": "15_conclusion.svg",
+            "message": "<text> (x=104, y=220; text='Fix the evaluation. …') exceeds <g id=\"heading\"> data-pptx-bounds on the horizontal axis: content (104.0, 184.3)-(1205.7, 234.7), container (104.0, 64.0)-(1164.0, 258.0), overflow horizontal 3.9%, vertical 0.0% (error above 5%); expand the root module bounds into available non-overlapping space; otherwise reflow the text; ≈26.9 px per Latin char at 42px incl. headroom; ≈39 chars fit in 1060 px"
+          },
+          {
+            "file": "15_conclusion.svg",
+            "message": "<text> (x=104, y=628; text='The model gain matte…') exceeds <g id=\"closing-proof\"> data-pptx-bounds on the vertical axis: content (104.0, 612.7)-(722.8, 634.3), container (104.0, 560.0)-(1164.0, 632.0), overflow horizontal 0.0%, vertical 3.2% (error above 5%); expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+          },
+          {
+            "file": "15_conclusion.svg",
+            "message": "Detected 3 paragraph-like line run(s) split across sibling <text> elements (<g id=\"imperatives\"> x=136.0, y=434.0..462.0, 2 lines; <g id=\"imperatives\"> x=506.0, y=434.0..462.0, 2 lines; <g id=\"imperatives\"> x=876.0, y=434.0..462.0, 2 lines). If each run is one prose paragraph, combine it into one <text>: keep its first line as direct text and use direct <tspan> children with the parent x and positive relative dy values for later lines. An all-<tspan> form may start with dy=\"0\". Keep semantically independent text frames separate."
+          }
+        ]
+      },
+      "inherited": {
+        "count": 0,
+        "issues": []
+      },
+      "source-import": {
+        "count": 0,
+        "summary": {
+          "warning_count": 0,
+          "by_code": {}
+        }
+      }
+    }
+  },
+  "resources": {
+    "unresolved_template_tokens": [],
+    "fonts": {
+      "stacks": [
+        "Aptos Display",
+        "Aptos Display, Arial",
+        "Aptos, Arial",
+        "Consolas",
+        "Consolas, Courier New"
+      ],
+      "generic_only_stacks": [],
+      "unsafe_exported_faces": [
+        {
+          "stack": "Aptos Display",
+          "role": "latin",
+          "typeface": "Aptos Display"
+        },
+        {
+          "stack": "Aptos Display, Arial",
+          "role": "latin",
+          "typeface": "Aptos Display"
+        },
+        {
+          "stack": "Aptos, Arial",
+          "role": "latin",
+          "typeface": "Aptos"
+        }
+      ]
+    },
+    "images": {
+      "data_uri": 0,
+      "local": 2,
+      "external": 0,
+      "external_references": []
+    }
+  },
+  "export_policy": {
+    "project_svg_contract": "strict",
+    "dangerous_normalization_count": 0
+  },
+  "deck_motion": {
+    "transition": {
+      "effect": "fade",
+      "effect_options": {},
+      "duration": 0.4,
+      "auto_advance": null,
+      "sound": null
+    },
+    "animation": {
+      "effect": "none",
+      "effect_request": null,
+      "duration": 0.4,
+      "stagger": 0.5,
+      "trigger": "after-previous"
+    },
+    "cli_overrides": {
+      "transition": false,
+      "transition_duration": false,
+      "auto_advance": false,
+      "transition_sound": false,
+      "animation": false,
+      "animation_duration": false,
+      "animation_stagger": false,
+      "animation_trigger": false
+    },
+    "narration_timings": false
+  },
+  "backup_path": "/Users/charlie/Desktop/HUST/MalwareAnalysis/doh_tunnel_detection/presentations/doh_paper_reproduction_20261017/backup/20261017_143339/svg_output",
+  "conversion_trace_path": null
+}

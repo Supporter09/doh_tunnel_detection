@@ -1,0 +1,1 @@
+At the paper’s windows, the improved BiGRU reaches 0.9153 F1 on layer one and 0.5538 on layer two under the corrected split. These values substantially exceed the corrected paper architecture, but layer two is still far below the paper’s flow-random claim at three clumps. The table therefore keeps paper-reported, project-random, corrected-baseline, and improved evidence separate.
