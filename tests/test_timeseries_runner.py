@@ -378,13 +378,15 @@ class TestTinySyntheticPipelineRun(unittest.TestCase):
                 make_test_flow("f_s2_m", "sess_2", "malicious_doh", l1_label=1, l2_label=1, num_clumps=7),
             ]
 
+            # Combined BenignDoH-NonDoH captures can contain both L1 labels
+            # even though their capture-level category is benign_doh.
             mock_audit = {
                 "total_capture_sources": 3,
-                "summary_by_category": {"non_doh": 1, "benign_doh": 1, "malicious_doh": 1},
-                "category_counts": {"non_doh": 1, "benign_doh": 1, "malicious_doh": 1},
+                "summary_by_category": {"benign_doh": 2, "malicious_doh": 1},
+                "category_counts": {"benign_doh": 2, "malicious_doh": 1},
                 "capture_sources": [
-                    {"category": "non_doh", "filename": "nd.pcap"},
-                    {"category": "benign_doh", "filename": "b.pcap"},
+                    {"category": "benign_doh", "filename": "combined_a.pcap"},
+                    {"category": "benign_doh", "filename": "combined_b.pcap"},
                     {"category": "malicious_doh", "filename": "m.pcap"},
                 ],
             }

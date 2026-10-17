@@ -1217,14 +1217,10 @@ def run_timeseries_pipeline(
 
     task_mode = config["task"]
 
-    if task_mode in {"l1", "both"}:
-        non_doh_candidates = cat_summary.get("non_doh", 0)
-        doh_candidates = cat_summary.get("benign_doh", 0) + cat_summary.get("malicious_doh", 0)
-        if non_doh_candidates == 0 or doh_candidates == 0:
-            raise ValueError(
-                f"Cannot execute Layer 1 training: missing classes. "
-                f"Discovered Non-DoH candidates: {non_doh_candidates}, DoH candidates: {doh_candidates}."
-            )
+    # Layer 1 ground truth is assigned per decoded flow from resolver IPs. A
+    # combined BenignDoH-NonDoH capture legitimately contains both L1 classes,
+    # so capture-level categories cannot prove either class is missing. The
+    # stratified flow split below remains the fail-closed class-presence check.
 
     if task_mode in {"l2", "both"}:
         benign_candidates = cat_summary.get("benign_doh", 0)
